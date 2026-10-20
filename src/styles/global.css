@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  padding: 32px;
+  font-family: system-ui, sans-serif;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+nav a[aria-current='page'] {
+  font-weight: 700;
+}
+
+footer {
+  margin-top: 32px;
+  border-top: 1px solid #ddd;
+  padding-top: 16px;
+}
