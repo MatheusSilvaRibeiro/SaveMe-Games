@@ -10,3 +10,5 @@ coverage/
 Thumbs.db
 .idea/
 .codex
+.tmp-tools/
+docs/

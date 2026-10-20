@@ -33,7 +33,7 @@ export function App() {
   return (
     <>
       <Header currentPath={path} />
-      <main>
+      <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-6 py-16 outline-none lg:px-10 lg:py-24">
         {Page ? <Page /> : <><h1>Página não encontrada</h1><a href="#/">Voltar ao início</a></>}
       </main>
       <Footer />
