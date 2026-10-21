@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/epic/games?*', route => route.fulfill({ json: { resultados: [], proximaPagina: null } }));
   await page.route('**/api/steam/featured', route => route.fulfill({ json: { termo: '', resultados: [] } }));
 });
 

@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+import { createEpicCatalog } from '../../tools/epic/epic-catalog.mjs';
+import { EpicError } from '../../tools/epic/epic-probe.mjs';
 import { Controller, Get, HttpException, Inject, Injectable, Module, Param, Query } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth.js';
@@ -13,6 +15,33 @@ export interface SteamClient {
   featured?(page: number): Promise<unknown>;
 }
 const STEAM_CLIENT = Symbol('STEAM_CLIENT');
+const EPIC_CLIENT = Symbol('EPIC_CLIENT');
+interface EpicClient {
+  search(term: string, options?: { page?: number }): Promise<unknown>;
+  list(options?: { page?: number }): Promise<unknown>;
+  details(id: string): Promise<unknown>;
+}
+@Controller('epic')
+class EpicController {
+  constructor(@Inject(EPIC_CLIENT) private readonly client: EpicClient) {}
+  private async execute(operation: () => Promise<unknown>) {
+    try { return await operation(); }
+    catch (error) {
+      if (!(error instanceof EpicError)) throw error;
+      const statuses: Record<string, number> = { INVALID_QUERY: 400, INVALID_ID: 400, UNAVAILABLE: 404, INCOMPATIBLE_OFFER: 400, RATE_LIMITED: 503, TIMEOUT: 504, NETWORK_ERROR: 503 };
+      const status = statuses[error.code] ?? 502;
+      throw new HttpException({ statusCode: status, code: error.code, message: error.message }, status);
+    }
+  }
+  @Get('games') search(@Query('q') q: unknown, @Query('page') page: unknown = '1') {
+    if (typeof page !== 'string' || !/^\d+$/.test(page) || !Number.isSafeInteger(Number(page)) || Number(page) < 1 ||
+      (q !== undefined && (typeof q !== 'string' || q.trim().length < 2 || q.trim().length > 100))) throw new HttpException('Pesquisa inválida.', 400);
+    return this.execute(() => typeof q === 'string' ? this.client.search(q.trim(), { page: Number(page) }) : this.client.list({ page: Number(page) }));
+  }
+  @Get('games/:offerId') details(@Param('offerId') id: string) {
+    return this.execute(() => this.client.details(id));
+  }
+}
 
 @Injectable()
 class SteamService {
@@ -70,7 +99,7 @@ class HealthController {
   @Get() health() { return { status: 'ok', service: 'saveme-api', steam: 'not_checked' }; }
 }
 
-export async function createApp(client?: SteamClient) {
+export async function createApp(client?: SteamClient, epicClient: EpicClient = createEpicCatalog()) {
   const catalog = createCatalog();
   const steamClient: SteamClient = client ?? {
     buscarJogos: async term => catalog.enrich(await buscarJogos(term)),
@@ -79,8 +108,8 @@ export async function createApp(client?: SteamClient) {
   };
   @Module({
     imports: [AuthModule],
-    controllers: [SteamController, HealthController],
-    providers: [SteamService, { provide: STEAM_CLIENT, useValue: steamClient }],
+    controllers: [SteamController, HealthController, EpicController],
+    providers: [{ provide: EPIC_CLIENT, useValue: epicClient }, SteamService, { provide: STEAM_CLIENT, useValue: steamClient }],
   })
   class AppModule {}
 

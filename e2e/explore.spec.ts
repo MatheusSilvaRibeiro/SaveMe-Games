@@ -8,6 +8,7 @@ const games = [
 ];
 
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/epic/games?*', route => route.fulfill({ json: { resultados: [], proximaPagina: null } }));
   await page.route('**/api/steam/**', async route => {
     const path = new URL(route.request().url()).pathname;
     const game = games.find(item => path.endsWith(`/${item.appId}`));
@@ -74,7 +75,7 @@ test('carrega mais sem duplicatas e preserva os cards se uma página falhar', as
     return route.fulfill({ json: { termo: '', resultados: secondPage ? [games[0], { ...games[1], appId: 1000, nome: 'Outro jogo' }] : games, proximaPagina: secondPage ? null : 2 } });
   });
   await page.goto('/#/busca');
-  await expect(page.getByPlaceholder('Buscar jogos na Steam')).toBeVisible();
+  await expect(page.getByPlaceholder('Buscar jogos por nome')).toBeVisible();
   await expect(page.getByText('Digite ao menos 2 caracteres e pressione Enter ou Buscar.')).toHaveCount(0);
   await page.getByRole('button', { name: 'Carregar mais jogos' }).click();
   await expect(page.getByRole('alert')).toBeVisible();

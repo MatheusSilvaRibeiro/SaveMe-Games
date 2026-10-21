@@ -22,7 +22,7 @@ before(async () => {
       if (id === '999999') throw new SteamError('UNAVAILABLE', 'Jogo indisponível.');
       return { appId: Number(id), nome: 'Portal 2', moeda: 'BRL', precoCentavos: 3399 };
     },
-  });
+  }, { search: async term => ({ termo: term, resultados: [], proximaPagina: null, pagina: 1, loja: 'Epic Games Store', fonte: 'EGData', regiao: 'BR', consultadoEm: new Date().toISOString() }), list: async () => ({ termo: '', resultados: [], proximaPagina: null, pagina: 1, loja: 'Epic Games Store', fonte: 'EGData', regiao: 'BR', consultadoEm: new Date().toISOString() }), details: async () => ({ id: '2ae6edb2223c4f8c97e9839b5b6497bb', namespace: 'min', nome: 'Hades', tipoOferta: 'BASE_GAME', loja: 'Epic Games Store', fonte: 'EGData', regiao: 'BR', precoCentavos: 7399, moeda: 'BRL', situacaoPreco: 'informado', link: 'https://store.epicgames.com/pt-BR/p/hades', registroPrecoEm: null, consultadoEm: new Date().toISOString(), imagem: null, generos: [], emBreve: false }) });
   await app.listen(0, '127.0.0.1');
   base = `${await app.getUrl()}/api`;
 });
@@ -72,4 +72,15 @@ test('preserva diferença entre indisponível, timeout e resposta quebrada', asy
 test('permite acesso do frontend local', async () => {
   const response = await fetch(`${base}/health`, { headers: { Origin: 'http://localhost:5173' } });
   assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+});
+
+test('Epic expõe catálogo, busca e detalhes sem restrição ao Hades', async () => {
+  assert.equal((await fetch(`${base}/epic/games`)).status, 200);
+  assert.equal((await fetch(`${base}/epic/games?q=Celeste`)).status, 200);
+  const body = await (await fetch(`${base}/epic/games/some-offer`)).json();
+  assert.equal(body.precoCentavos, 7399);
+  assert.equal(body.fonte, 'EGData');
+  for (const path of ['/epic/games?q=a', '/epic/games?page=0', '/epic/games?q=aa&q=bb']) {
+    assert.equal((await fetch(`${base}${path}`)).status, 400);
+  }
 });

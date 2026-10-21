@@ -1,3 +1,4 @@
+import { EpicCatalog } from '../components/EpicCatalog';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { getGame, getFeatured, searchGames, type GameDetails, type SearchItem } from '../services/steam';
 
@@ -26,8 +27,10 @@ export function Busca() {
   const [moreError, setMoreError] = useState('');
   const [searching, setSearching] = useState(false);
   const [genre, setGenre] = useState('all');
+  const [epicGenres, setEpicGenres] = useState<string[]>([]);
   const [priceFilter, setPriceFilter] = useState('all');
   const [searchedTerm, setSearchedTerm] = useState('');
+  const [epicTerm, setEpicTerm] = useState('');
   const [results, setResults] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
@@ -41,7 +44,7 @@ export function Busca() {
     searchRequest.current?.abort();
     const controller = new AbortController();
     searchRequest.current = controller;
-    setQuery(''); setSearchedTerm(''); setResults([]); setSearchError(''); setLoading(true);
+    setQuery(''); setEpicTerm(''); setSearchedTerm(''); setResults([]); setSearchError(''); setLoading(true);
     setNextPage(null); setLoadingMore(false); setMoreError(''); setSearching(false);
     setGenre('all'); setPriceFilter('all');
     try {
@@ -68,7 +71,7 @@ export function Busca() {
     finally { if (!controller.signal.aborted) setLoadingMore(false); }
   }
 
-  const genres = [...new Set(results.flatMap(game => game.generos ?? []))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const genres = [...new Set([...results.flatMap(game => game.generos ?? []), ...epicGenres])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   const visibleResults = results.filter(game =>
     (genre === 'all' || game.generos?.includes(genre)) &&
     (priceFilter === 'all' || (priceFilter === 'free' ? game.precoCentavos === 0 : game.precoCentavos != null && game.precoCentavos > 0))
@@ -87,7 +90,7 @@ export function Busca() {
     }
     const controller = new AbortController();
     searchRequest.current = controller;
-    setLoading(true); setSearching(true);
+    setEpicTerm(term); setLoading(true); setSearching(true);
     try {
       const response = await searchGames(term, controller.signal);
       if (!controller.signal.aborted) { setResults(response.resultados); setSearchedTerm(term); }
@@ -117,13 +120,13 @@ export function Busca() {
   return (
     <>
       <h1>Encontre seu próximo jogo</h1>
-      <p>Explore jogos e encontre ofertas da Steam em reais.</p>
+      <p>Explore jogos da Steam e da Epic Games Store em reais.</p>
       <section aria-label="Pesquisar jogos" className="mt-8">
         <form onSubmit={submitSearch}>
           <label htmlFor="game-search" className="sr-only">Qual jogo você está procurando?</label>
           <div className="flex flex-col gap-3 sm:flex-row">
             <input id="game-search" type="search" value={query} onChange={event => setQuery(event.target.value)}
-              maxLength={100} placeholder="Buscar jogos na Steam"
+              maxLength={100} placeholder="Buscar jogos por nome"
               className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-5 py-4 text-base" />
             <button type="submit" disabled={searching} className="rounded-xl bg-brand-purple px-6 py-3 font-semibold text-white hover:bg-violet-800 disabled:cursor-wait disabled:opacity-60">
               {searching ? 'Buscando…' : 'Buscar'}
@@ -131,19 +134,10 @@ export function Busca() {
           </div>
         </form>
       </section>
-      <div className="mt-8 flex flex-wrap items-end justify-between gap-5">
-        <div><h2 className="font-display text-2xl font-semibold">{searchedTerm ? 'Resultados da busca' : 'Explore a Steam'}</h2>
-          {!searchedTerm && <p className="mt-2 !mb-0 text-sm">Mais vendidos, ofertas e novidades selecionados pela Steam.</p>}
-        </div>
-        {searchedTerm && <button type="button" onClick={() => void loadFeatured()} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-violet-50">Explorar jogos</button>}
-      </div>
-      <section aria-label="Resultados da busca" aria-busy={loading} className="mt-8">
-        <div role="status" aria-live="polite">
-          {loading && <p>Carregando jogos…</p>}
-          {!loading && searchedTerm && <p>{results.length ? `${results.length} resultados para “${searchedTerm}”.` : `Nenhum resultado para “${searchedTerm}”. Tente outro nome.`}</p>}
-        </div>
-        {searchError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 !text-red-800">{searchError}</p>}
-        {results.length > 0 && <>
+      <nav aria-label="Ir para uma loja" className="my-6 flex flex-wrap gap-3">
+        <button type="button" onClick={() => document.getElementById('steam-catalog')?.scrollIntoView({ behavior: 'auto', block: 'start' })} className="rounded-full border border-brand-purple bg-white px-5 py-2 font-semibold text-brand-purple hover:bg-violet-50">Ver jogos da Steam ↓</button>
+        <button type="button" onClick={() => document.getElementById('epic-catalog')?.scrollIntoView({ behavior: 'auto', block: 'start' })} className="rounded-full border border-brand-purple bg-white px-5 py-2 font-semibold text-brand-purple hover:bg-violet-50">Ver jogos da Epic ↓</button>
+      </nav>
           <div className="mb-5 flex flex-wrap items-end gap-4 rounded-xl border border-slate-200 bg-white p-4">
             <div className="min-w-40 flex-1"><label htmlFor="genre-filter" className="mb-2 block text-sm font-semibold">Gênero</label>
               <select id="genre-filter" value={genre} onChange={event => setGenre(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2">
@@ -156,8 +150,22 @@ export function Busca() {
               </select>
             </div>
             {(genre !== 'all' || priceFilter !== 'all') && <button type="button" onClick={() => { setGenre('all'); setPriceFilter('all'); }} className="rounded-lg px-3 py-2 text-sm font-semibold text-brand-purple hover:bg-violet-50">Limpar filtros</button>}
-            <p className="basis-full !mb-0 text-xs">Filtrar os jogos carregados</p>
+            <p className="basis-full !mb-0 text-xs">Filtrar os jogos carregados nas duas lojas</p>
           </div>
+      <div id="steam-catalog" className="scroll-mt-8">
+      <div className="mt-8 flex flex-wrap items-end justify-between gap-5">
+        <div><h2 className="font-display text-2xl font-semibold">{searchedTerm ? 'Resultados na Steam' : 'Explore a Steam'}</h2>
+          {!searchedTerm && <p className="mt-2 !mb-0 text-sm">Mais vendidos, ofertas e novidades selecionados pela Steam.</p>}
+        </div>
+        {searchedTerm && <button type="button" onClick={() => void loadFeatured()} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-violet-50">Explorar jogos</button>}
+      </div>
+      <section aria-label="Resultados da busca" aria-busy={loading} className="mt-8">
+        <div role="status" aria-live="polite">
+          {loading && <p>Carregando jogos…</p>}
+          {!loading && searchedTerm && <p>{results.length ? `${results.length} resultados para “${searchedTerm}”.` : `Nenhum resultado para “${searchedTerm}”. Tente outro nome.`}</p>}
+        </div>
+        {searchError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 !text-red-800">{searchError}</p>}
+        {results.length > 0 && <>
           {searchedTerm && <p className="text-sm">A pesquisa também pode encontrar complementos e trilhas sonoras. Confira o conteúdo antes de comprar.</p>}
           <p aria-live="polite" className="text-sm">{visibleResults.length} {visibleResults.length === 1 ? 'título exibido' : 'títulos exibidos'}.</p>
           {!visibleResults.length && <div className="rounded-xl border border-slate-200 bg-white p-6"><p className="!mb-0">Nenhum título corresponde aos filtros. Altere ou limpe os filtros para ver outras opções.</p></div>}
@@ -189,6 +197,8 @@ export function Busca() {
         {moreError && <p role="alert" className="mt-5 !text-red-800">{moreError}</p>}
         {!searchedTerm && nextPage && <div className="mt-8 text-center"><button type="button" disabled={loadingMore} onClick={() => void loadMore()} className="rounded-xl border border-brand-purple bg-white px-8 py-3 font-semibold text-brand-purple hover:bg-violet-50 disabled:opacity-60">{loadingMore ? 'Carregando…' : 'Carregar mais jogos'}</button></div>}
       </section>
+      </div>
+      <div id="epic-catalog" className="scroll-mt-8"><EpicCatalog term={epicTerm} genre={genre} priceFilter={priceFilter} onGenres={setEpicGenres} /></div>
       <dialog ref={dialog} onClose={() => { setSelectedGame(null); setDetails(null); setDetailsError(''); }}
         onClick={event => { if (event.target === event.currentTarget) closeDetails(); }}
         aria-labelledby="game-details-title" aria-describedby="game-details-description"

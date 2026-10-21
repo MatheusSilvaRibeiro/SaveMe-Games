@@ -12,7 +12,7 @@ export interface GameDetails extends SearchItem {
 interface SearchResponse { termo: string; resultados: SearchItem[]; proximaPagina?: number | null; total?: number; }
 const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
-async function request<T>(path: string, signal: AbortSignal): Promise<T> {
+export async function request<T>(path: string, signal: AbortSignal): Promise<T> {
   try {
     const response = await fetch(`${base}${path}`, { signal: AbortSignal.any([signal, AbortSignal.timeout(25000)]) });
     if (!response.ok) {
