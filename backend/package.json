@@ -10,7 +10,7 @@
     "build": "prisma generate && tsc -p tsconfig.json",
     "start": "node dist/backend/src/main.js",
     "dev": "npm run build && npm start",
-    "test": "npm run build && node --test dist/backend/test/http.test.js dist/backend/test/auth.test.js",
+    "test": "npm run build && node --test dist/backend/test/http.test.js dist/backend/test/auth.test.js dist/backend/test/comparison.test.js",
     "prisma:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:status": "prisma migrate status",

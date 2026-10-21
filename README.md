@@ -16,13 +16,23 @@ Requer Node.js 22 e npm. O setup instala dependências do site e da API. O coman
 
 Tokens da marca são definidos no `@theme` de `src/styles/global.css`.
 
-## Busca Steam integrada
+## Catálogo de jogos e comparação
 
 Na primeira execução, use `npm run setup`. Depois, `npm run dev` inicia site e API juntos. Para trabalhar com terminais separados, use `npm run dev:api` e `npm run dev:web`. Não execute os dois modos ao mesmo tempo nas mesmas portas.
 
-Acesse http://127.0.0.1:5173/#/busca. A busca é enviada ao clicar em Buscar ou pressionar Enter. Selecione um resultado para consultar o preço e abrir a página na Steam. Resultados podem incluir complementos e trilhas sonoras; não há comparação entre lojas nesta etapa.
+Acesse http://127.0.0.1:5173/#/busca. A busca é enviada ao clicar em Buscar ou pressionar Enter. Selecione um resultado para consultar o preço e abrir a página na Steam. Resultados da Steam podem incluir complementos e trilhas sonoras. A Epic tem uma seção própria para jogos de PC no Brasil. Os botões de loja navegam entre as seções e os filtros de gênero e preço se aplicam aos resultados carregados.
 
 O proxy `/api` do Vite é apenas para desenvolvimento. Para publicação, configure `VITE_API_BASE_URL` antes do build ou encaminhe `/api` no servidor. O backend escuta somente no computador local. Cadastro e login usam PostgreSQL 17, Prisma e JWT; consulte [a configuração do banco e pgAdmin 4](backend/README.md#banco-e-autenticação) antes de usar as contas.
+
+### Comparação de preços
+
+Acesse `http://127.0.0.1:5173/#/comparacao` e selecione um jogo. Esta versão compara Hades, Hades II, Celeste, Dead Cells e Among Us (jogos base para PC). Nos títulos associados, a busca também oferece o link de comparação: nos detalhes Steam e nos cards Epic.
+
+A API consulta as integrações existentes, ordena as ofertas por preço e informa economia ou empate somente quando as duas lojas têm valores válidos em BRL. Falhas e preços ausentes geram um resultado parcial. A fonte dos dados Epic é a EGData, serviço de terceiros; o horário da consulta e a data do registro de preço na fonte são apresentados separadamente. Confirme preço e condições na loja.
+
+As associações conferidas ficam em `data/game-associations.json`, lidas pelo repositório em `backend/src/comparison/catalog.ts` e separadas das regras em `service.ts`. O JSON contém os identificadores e metadados dos jogos; os preços vêm das fontes e não são fixados nele. O contrato `GameAssociationRepository` permite substituir a implementação por Prisma posteriormente. Esta feature não exige conexão com o banco nem cria tabelas de jogos ou preços.
+
+A cobertura é limitada às associações cadastradas. Não há correspondência automática por semelhança de nome, pois isso pode misturar jogos, edições, DLCs e versões para celular.
 
 ### Verificação
 
@@ -30,6 +40,7 @@ O proxy `/api` do Vite é apenas para desenvolvimento. Para publicação, config
 - `node --test tools/dev.test.mjs`: verifica o início conjunto e o proxy em portas alternativas 3101/5174, sem consultar a Steam.
 - `npm test --prefix backend`: testes HTTP da API com fonte simulada.
 - `node --test tools/steam/steam-probe.test.mjs tools/steam/steam-search.test.mjs tools/steam/steam-catalog.test.mjs tools/steam/steam-featured.test.mjs`: testes dos adaptadores.
+- `npm run test:e2e -- e2e/comparison.spec.ts`: testa a página de comparação, navegação, empate, gratuidade e falhas com dados simulados.
 - `npm run test:e2e`: testes de interface com Playwright e Microsoft Edge instalado. Os servidores são iniciados automaticamente se não estiverem rodando.
 - No PowerShell, `$env:STEAM_LIVE_TEST='1'; npm run test:e2e -- --grep '@live'` habilita uma verificação externa opcional. Remova a variável ao terminar com `Remove-Item Env:STEAM_LIVE_TEST`.
 
