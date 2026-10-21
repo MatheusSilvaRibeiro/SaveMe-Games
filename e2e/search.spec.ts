@@ -1,11 +1,15 @@
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/steam/featured', route => route.fulfill({ json: { termo: '', resultados: [] } }));
+});
+
 const item = { appId: 620, nome: 'Portal 2', imagem: null, link: 'https://store.steampowered.com/app/620/' };
 const details = { ...item, tipo: 'game', loja: 'Steam', regiao: 'BR', moeda: 'BRL', precoCentavos: 3399, situacaoPreco: 'informado', consultadoEm: '2026-10-20T20:00:00Z' };
 
 test('pesquisa só ao enviar e abre a oferta correta; Escape devolve o foco', async ({ page }) => {
   let searches = 0;
-  await page.route('**/api/steam/**', async route => {
+  await page.route(/\/api\/steam\/games(?:\?|\/)/, async route => {
     if (new URL(route.request().url()).pathname.endsWith('/620')) return route.fulfill({ json: details });
     searches++;
     return route.fulfill({ json: { termo: 'Portal 2', resultados: [item] } });
@@ -25,7 +29,7 @@ test('pesquisa só ao enviar e abre a oferta correta; Escape devolve o foco', as
 });
 
 test('busca vazia e falha do serviço têm estados diferentes', async ({ page }) => {
-  await page.route('**/api/steam/**', async route => {
+  await page.route(/\/api\/steam\/games(?:\?|\/)/, async route => {
     const q = new URL(route.request().url()).searchParams.get('q');
     return q === 'vazio' ? route.fulfill({ json: { termo: q, resultados: [] } }) : route.fulfill({ status: 503, json: { code: 'NETWORK_ERROR' } });
   });
@@ -40,7 +44,7 @@ test('busca vazia e falha do serviço têm estados diferentes', async ({ page })
 
 test('preço ausente não aparece como gratuito e falha de detalhes permite repetir', async ({ page }) => {
   let attempts = 0;
-  await page.route('**/api/steam/**', async route => {
+  await page.route(/\/api\/steam\/games(?:\?|\/)/, async route => {
     if (!new URL(route.request().url()).pathname.endsWith('/620')) return route.fulfill({ json: { resultados: [item] } });
     if (++attempts === 1) return route.fulfill({ status: 504, json: { code: 'TIMEOUT' } });
     return route.fulfill({ json: { ...details, precoCentavos: null, moeda: null, situacaoPreco: 'indisponivel' } });
@@ -57,7 +61,7 @@ test('preço ausente não aparece como gratuito e falha de detalhes permite repe
 
 test('modal e busca cabem no celular e jogo gratuito é identificado', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.route('**/api/steam/**', async route => route.fulfill({ json:
+  await page.route(/\/api\/steam\/games(?:\?|\/)/, async route => route.fulfill({ json:
     new URL(route.request().url()).pathname.endsWith('/620')
       ? { ...details, precoCentavos: 0, situacaoPreco: 'gratuito' }
       : { resultados: [item] },
@@ -76,7 +80,7 @@ test('modal e busca cabem no celular e jogo gratuito é identificado', async ({ 
 
 test('termo muito curto não consulta a API', async ({ page }) => {
   let calls = 0;
-  await page.route('**/api/steam/**', async route => { calls++; await route.fulfill({ json: { resultados: [] } }); });
+  await page.route(/\/api\/steam\/games(?:\?|\/)/, async route => { calls++; await route.fulfill({ json: { resultados: [] } }); });
   await page.goto('/#/busca');
   await page.getByLabel('Qual jogo você está procurando?').fill('a');
   await page.getByRole('button', { name: 'Buscar', exact: true }).click();
@@ -104,7 +108,7 @@ for (const scenario of [
   { type: null, label: 'Tipo não identificado', note: 'Confira a descrição na Steam' },
 ]) {
   test(`identifica conteúdo sem presumir jogo: ${scenario.type ?? 'ausente'}`, async ({ page }) => {
-    await page.route('**/api/steam/**', async route => route.fulfill({ json:
+    await page.route(/\/api\/steam\/games(?:\?|\/)/, async route => route.fulfill({ json:
       new URL(route.request().url()).pathname.endsWith('/620')
         ? { ...details, tipo: scenario.type }
         : { resultados: [item] },
@@ -122,7 +126,7 @@ for (const scenario of [
 
 
 test('cards e popup mostram preço, especificações e nota com fonte', async ({ page }) => {
-  await page.route('**/api/steam/**', async route => route.fulfill({ json:
+  await page.route(/\/api\/steam\/games(?:\?|\/)/, async route => route.fulfill({ json:
     new URL(route.request().url()).pathname.endsWith('/620')
       ? { ...details, metacritic: 95, sistemas: ['Windows', 'Linux'], generos: ['Ação', 'Aventura'], desenvolvedoras: ['Valve'], lancamento: '18 abr. 2011' }
       : { resultados: [{ ...item, precoCentavos: 3399, metacritic: 95, sistemas: ['Windows', 'Linux'] }] },
