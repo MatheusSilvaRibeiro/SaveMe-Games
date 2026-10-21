@@ -1,4 +1,10 @@
 import { createApp } from './app.js';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const envPath = resolve('backend/.env');
+if (existsSync(envPath)) process.loadEnvFile(envPath);
+else if (existsSync('.env')) process.loadEnvFile('.env');
 
 async function main() {
   const port = Number(process.env.API_PORT ?? 3000);

@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { Controller, Get, HttpException, Inject, Injectable, Module, Param, Query } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { AuthModule } from './auth.js';
 import { createCatalog } from '../../tools/steam/steam-catalog.mjs';
 import { buscarJogos } from '../../tools/steam/steam-search.mjs';
 import { consultarJogo, SteamError } from '../../tools/steam/steam-probe.mjs';
@@ -77,6 +78,7 @@ export async function createApp(client?: SteamClient) {
     featured: page => catalog.featured(page),
   };
   @Module({
+    imports: [AuthModule],
     controllers: [SteamController, HealthController],
     providers: [SteamService, { provide: STEAM_CLIENT, useValue: steamClient }],
   })
@@ -84,7 +86,7 @@ export async function createApp(client?: SteamClient) {
 
   const app = await NestFactory.create(AppModule, { logger: false });
   app.setGlobalPrefix('api');
-  app.enableCors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] });
+  app.enableCors({ origin: (process.env.AUTH_ORIGINS ?? 'http://localhost:5173,http://127.0.0.1:5173').split(',').map(value => value.trim()), credentials: true });
   app.enableShutdownHooks();
   return app;
 }

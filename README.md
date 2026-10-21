@@ -22,7 +22,7 @@ Na primeira execução, use `npm run setup`. Depois, `npm run dev` inicia site e
 
 Acesse http://127.0.0.1:5173/#/busca. A busca é enviada ao clicar em Buscar ou pressionar Enter. Selecione um resultado para consultar o preço e abrir a página na Steam. Resultados podem incluir complementos e trilhas sonoras; não há comparação entre lojas nesta etapa.
 
-O proxy `/api` do Vite é apenas para desenvolvimento. Para publicação, configure `VITE_API_BASE_URL` antes do build ou encaminhe `/api` no servidor. O backend nesta etapa escuta somente no computador local e ainda não usa banco ou autenticação.
+O proxy `/api` do Vite é apenas para desenvolvimento. Para publicação, configure `VITE_API_BASE_URL` antes do build ou encaminhe `/api` no servidor. O backend escuta somente no computador local. Cadastro e login usam PostgreSQL 17, Prisma e JWT; consulte [a configuração do banco e pgAdmin 4](backend/README.md#banco-e-autenticação) antes de usar as contas.
 
 ### Verificação
 
