@@ -2,12 +2,14 @@
 
 Base da página web em React + TypeScript + Vite + Tailwind CSS 4.
 
+Primeiro acesso ao projeto? Siga o [tutorial completo para baixar, configurar PostgreSQL e rodar localmente](COMO-RODAR.md).
+
 ```powershell
 npm run setup
 npm run dev
 ```
 
-Requer Node.js 22 e npm. O setup instala dependências do site e da API. O comando dev compila e inicia a API, aguarda sua resposta e então inicia o site. Acesse http://127.0.0.1:5173/#/busca. Mantenha o terminal aberto; Ctrl+C encerra os dois serviços.
+Requer Node.js 24 ou 22.12+ e npm. O setup instala dependências do site e da API e gera o cliente Prisma. Configure o banco e aplique as migrações conforme o tutorial antes de usar cadastro e login. O comando dev compila e inicia a API, aguarda sua resposta e então inicia o site. Acesse http://127.0.0.1:5173/#/busca. Mantenha o terminal aberto; Ctrl+C encerra os dois serviços.
 
 - `src/App.tsx`: estrutura compartilhada e seleção das páginas por hash.
 - `src/components/`: Header, Footer e assinatura textual compartilhada.
