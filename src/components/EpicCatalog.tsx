@@ -1,7 +1,8 @@
+import type { ComparableGame } from '../services/comparison';
 import { useEffect, useState } from 'react';
 import { searchEpic, type EpicOffer } from '../services/epic';
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-interface Props { term: string; genre: string; priceFilter: string; onGenres: (genres: string[]) => void; }
+interface Props { comparableGames?: ComparableGame[]; term: string; genre: string; priceFilter: string; onGenres: (genres: string[]) => void; }
 function EpicArtwork({ src }: { src: string | null }) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -14,7 +15,7 @@ export function EpicCatalog(props: Props) {
   // Remounting the inner list on term change resets pagination atomically.
   return <EpicList key={props.term} {...props} />;
 }
-function EpicList({ term, genre, priceFilter, onGenres }: Props) {
+function EpicList({ term, genre, priceFilter, onGenres, comparableGames = [] }: Props) {
   const [items, setItems] = useState<EpicOffer[]>([]);
   const [page, setPage] = useState(1);
   const [next, setNext] = useState<number | null>(null);
@@ -56,6 +57,7 @@ function EpicList({ term, genre, priceFilter, onGenres }: Props) {
           <p className="!mb-3 text-xl font-bold">{item.emBreve ? 'Em breve' : item.precoCentavos === null ? 'Preço não informado para o Brasil' : item.precoCentavos === 0 ? 'Grátis nesta oferta' : money.format(item.precoCentavos / 100)}</p>
           {item.descontoPercentual != null && item.descontoPercentual > 0 && <span className="mb-3 inline-block rounded-md bg-green-100 px-2 py-1 text-sm font-semibold text-green-900">−{item.descontoPercentual}%</span>}
           <a href={item.link ?? `https://store.epicgames.com/pt-BR/browse?q=${encodeURIComponent(item.nome)}&sortBy=relevancy&sortDir=DESC&count=40`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center rounded-lg bg-brand-purple px-4 py-3 text-sm font-semibold !text-white">{!item.link ? 'Pesquisar na Epic ↗' : item.emBreve || item.precoCentavos === null ? 'Ver página na Epic ↗' : 'Ver oferta na Epic ↗'}</a>
+          {comparableGames.filter(game => game.epic.offerId === item.id && game.epic.namespace === item.namespace).map(game => <a key={game.id} href={`#/comparacao/${game.id}`} className="mt-3 block text-center text-sm font-semibold text-brand-purple">Comparar preços nas lojas →</a>)}
           {!item.link && <p className="mt-2 !mb-0 text-xs">Página exata não informada pela fonte. O botão busca este nome na loja.</p>}
         </div>
       </div>

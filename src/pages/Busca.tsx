@@ -1,3 +1,4 @@
+import { getComparableGames, type ComparableGame } from '../services/comparison';
 import { EpicCatalog } from '../components/EpicCatalog';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { getGame, getFeatured, searchGames, type GameDetails, type SearchItem } from '../services/steam';
@@ -22,6 +23,12 @@ const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL
 
 export function Busca() {
   const [query, setQuery] = useState('');
+  const [comparableGames, setComparableGames] = useState<ComparableGame[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    getComparableGames(controller.signal).then(data => { if (!controller.signal.aborted) setComparableGames(data); }).catch(() => {});
+    return () => controller.abort();
+  }, []);
   const [nextPage, setNextPage] = useState<number | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreError, setMoreError] = useState('');
@@ -198,7 +205,7 @@ export function Busca() {
         {!searchedTerm && nextPage && <div className="mt-8 text-center"><button type="button" disabled={loadingMore} onClick={() => void loadMore()} className="rounded-xl border border-brand-purple bg-white px-8 py-3 font-semibold text-brand-purple hover:bg-violet-50 disabled:opacity-60">{loadingMore ? 'Carregando…' : 'Carregar mais jogos'}</button></div>}
       </section>
       </div>
-      <div id="epic-catalog" className="scroll-mt-8"><EpicCatalog term={epicTerm} genre={genre} priceFilter={priceFilter} onGenres={setEpicGenres} /></div>
+      <div id="epic-catalog" className="scroll-mt-8"><EpicCatalog term={epicTerm} genre={genre} priceFilter={priceFilter} onGenres={setEpicGenres} comparableGames={comparableGames} /></div>
       <dialog ref={dialog} onClose={() => { setSelectedGame(null); setDetails(null); setDetailsError(''); }}
         onClick={event => { if (event.target === event.currentTarget) closeDetails(); }}
         aria-labelledby="game-details-title" aria-describedby="game-details-description"
@@ -232,6 +239,7 @@ export function Busca() {
             <a href={`https://store.steampowered.com/app/${details.appId}/`} target="_blank" rel="noopener noreferrer"
               className="mb-4 inline-flex w-full items-center justify-center rounded-xl bg-brand-purple px-5 py-3 !text-white">Ver na Steam ↗</a>
           </>}
+          {selectedGame && comparableGames.filter(game => game.steam.appId === selectedGame.appId).map(game => <a key={game.id} href={`#/comparacao/${game.id}`} className="mb-4 inline-flex w-full justify-center rounded-xl border border-brand-purple px-5 py-3 font-semibold text-brand-purple">Comparar preços nas lojas →</a>)}
           <button type="button" onClick={closeDetails} className="w-full rounded-xl border border-slate-300 px-5 py-3 font-semibold hover:bg-cloud">Voltar à busca</button>
         </div>
       </dialog>

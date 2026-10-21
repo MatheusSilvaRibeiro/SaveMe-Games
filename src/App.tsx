@@ -28,13 +28,14 @@ export function App() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  const Page = Object.hasOwn(pages, path) ? pages[path as keyof typeof pages] : null;
+  const route = path.startsWith('/comparacao/') ? '/comparacao' : path;
+  const Page = Object.hasOwn(pages, route) ? pages[route as keyof typeof pages] : null;
 
   return (
     <>
-      <Header currentPath={path} />
+      <Header currentPath={route} />
       <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-6 py-16 outline-none lg:px-10 lg:py-24">
-        {Page ? <Page /> : <><h1>Página não encontrada</h1><a href="#/">Voltar ao início</a></>}
+        {Page ? <Page key={path} /> : <><h1>Página não encontrada</h1><a href="#/">Voltar ao início</a></>}
       </main>
       <Footer />
     </>

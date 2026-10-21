@@ -14,6 +14,11 @@ npm run dev
 
 Rotas locais:
 
+- `GET /api/comparisons/games`: associações disponíveis para comparação, com ID interno, edição e identificadores das lojas.
+- `GET /api/comparisons/:gameId`: compara as ofertas do jogo associado (por exemplo, `celeste`). Retorna `jogo`, `ofertas`, `situacao`, `menorPrecoCentavos`, `lojasMenorPreco` e `economiaCentavos`. Quando a consulta é parcial ou não há preços, os valores de menor preço e economia são `null`. IDs sem associação retornam 404; IDs inválidos retornam 400. A rota é pública e não usa autenticação ou banco.
+- `GET /api/epic/games?q=Celeste&page=1`: busca Epic via EGData. Sem `q`, lista ofertas de PC com preço e página disponíveis para o Brasil.
+- `GET /api/epic/games/:offerId`: detalhes e preço regional Epic via EGData.
+
 - `GET /api/health`: saúde da API, sem verificar Steam ou banco.
 - `GET /api/steam/featured`: destaques da Steam em páginas de 12 títulos. Use `?page=2` para continuar; `proximaPagina` indica a próxima página disponível. A fonte combina mais vendidos, ofertas e novidades, sem duplicatas.
 - `GET /api/steam/games?q=Portal%202`: resultados para seleção, incluindo possíveis DLCs e trilhas sonoras.
@@ -24,6 +29,14 @@ Porta padrão 3000; configure `API_PORT` no ambiente se precisar. O processo esc
 Erros: 400 entrada inválida, 404 produto indisponível na consulta, 502 resposta externa inválida/HTTP de falha, 503 falha de conexão, 504 tempo esgotado. Preço ausente é null; gratuito é zero com indicação da fonte.
 
 Os endpoints `featuredcategories`, `storesearch` e `appdetails` são da loja Steam e foram testados experimentalmente. Não há garantia de estabilidade ou cobertura estabelecida por esta investigação. Limites e condições de uso ainda precisam ser avaliados. Há cache público em memória por cinco minutos (até 100 entradas), compartilhamento de consultas simultâneas e limite de três consultas externas de detalhes em andamento. Os detalhes usam timeout de 2,5 segundos; falhas preservam os dados básicos da busca sem inventar gratuidade ou gênero. A busca enriquece até 12 resultados. Os preços não são persistidos e a meta de disponibilidade ainda não foi comprovada. O horário retornado indica nossa consulta, não a data de alteração do preço na loja.
+
+## Associações e comparação
+
+`src/comparison/catalog.ts` implementa `GameAssociationRepository` lendo `data/game-associations.json` na raiz do repositório. O catálogo inicial inclui Hades, Hades II, Celeste, Dead Cells e Among Us para PC. Essas associações preservam os exemplos da feature; a expansão automática do catálogo será implementada no backend. Preserve a pasta `data` junto ao projeto ao publicar a API; ela não é gerada pelo build TypeScript. A associação é conferida por identificadores, namespace e edição; não usa correspondência aproximada de títulos. Para migrar ao PostgreSQL, implemente o mesmo contrato e substitua o repositório na criação do serviço em `app.ts`.
+
+`src/comparison/service.ts` consulta as duas lojas em paralelo e valida identidade, tipo de conteúdo, região e moeda. Menor preço e economia exigem duas ofertas válidas. Empate mantém as duas lojas como menor preço; falhas de uma fonte preservam a outra oferta, sem declarar vencedora. Preço ausente é `null`; zero válido representa gratuidade na oferta. Descontos usam o preço original da própria loja.
+
+O resultado completo é mantido em cache por 60 segundos; resultados parciais, por 10 segundos. As integrações podem reutilizar preços por até cinco minutos. Consultas simultâneas ao mesmo jogo são compartilhadas e os horários originais são preservados. Os testes de comparação fazem parte de `npm test` e não precisam de PostgreSQL.
 
 ## Banco e autenticação
 

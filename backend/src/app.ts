@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+import { fileGameAssociations } from './comparison/catalog.js';
+import { createComparisonService } from './comparison/service.js';
 import { createEpicCatalog } from '../../tools/epic/epic-catalog.mjs';
 import { EpicError } from '../../tools/epic/epic-probe.mjs';
 import { Controller, Get, HttpException, Inject, Injectable, Module, Param, Query } from '@nestjs/common';
@@ -16,6 +18,13 @@ export interface SteamClient {
 }
 const STEAM_CLIENT = Symbol('STEAM_CLIENT');
 const EPIC_CLIENT = Symbol('EPIC_CLIENT');
+const COMPARISON_SERVICE = Symbol('COMPARISON_SERVICE');
+@Controller('comparisons')
+class ComparisonController {
+  constructor(@Inject(COMPARISON_SERVICE) private readonly comparison: ReturnType<typeof createComparisonService>) {}
+  @Get('games') list() { return this.comparison.list(); }
+  @Get(':gameId') compare(@Param('gameId') id: string) { return this.comparison.compare(id); }
+}
 interface EpicClient {
   search(term: string, options?: { page?: number }): Promise<unknown>;
   list(options?: { page?: number }): Promise<unknown>;
@@ -108,8 +117,8 @@ export async function createApp(client?: SteamClient, epicClient: EpicClient = c
   };
   @Module({
     imports: [AuthModule],
-    controllers: [SteamController, HealthController, EpicController],
-    providers: [{ provide: EPIC_CLIENT, useValue: epicClient }, SteamService, { provide: STEAM_CLIENT, useValue: steamClient }],
+    controllers: [SteamController, HealthController, EpicController, ComparisonController],
+    providers: [{ provide: COMPARISON_SERVICE, useValue: createComparisonService(fileGameAssociations, { steam: id => steamClient.consultarJogo(id), epic: id => epicClient.details(id) }) }, { provide: EPIC_CLIENT, useValue: epicClient }, SteamService, { provide: STEAM_CLIENT, useValue: steamClient }],
   })
   class AppModule {}
 
