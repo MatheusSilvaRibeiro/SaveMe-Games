@@ -12,3 +12,6 @@ Thumbs.db
 .codex
 .tmp-tools/
 docs/
+
+playwright-report/
+test-results/
