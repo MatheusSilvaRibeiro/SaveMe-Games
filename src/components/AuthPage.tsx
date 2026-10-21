@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { authenticate } from '../services/auth';
 
 const inputClass = 'w-full rounded-xl border border-slate-300 bg-cloud px-4 py-3 text-base transition-colors placeholder:text-slate-400 focus:border-brand-purple focus:bg-white';
 
@@ -8,7 +9,7 @@ function PasswordField({ id, label, confirm = false }: { id: string; label: stri
     <div>
       <label htmlFor={id} className="mb-2 block text-sm font-semibold">{label}</label>
       <div className="relative">
-        <input id={id} name={id} type={visible ? 'text' : 'password'} required minLength={8} autoComplete={id === 'login-password' ? 'current-password' : 'new-password'} aria-describedby={confirm ? undefined : `${id}-hint`} className={`${inputClass} pr-24`} />
+        <input id={id} name={id} type={visible ? 'text' : 'password'} required minLength={8} maxLength={128} autoComplete={id === 'login-password' ? 'current-password' : 'new-password'} aria-describedby={confirm ? undefined : `${id}-hint`} className={`${inputClass} pr-24`} />
         <button type="button" aria-controls={id} aria-label={`${visible ? 'Ocultar' : 'Mostrar'} ${label.toLowerCase()}`} aria-pressed={visible} onClick={() => setVisible(!visible)} className="absolute inset-y-1 right-1 rounded-lg px-3 text-sm font-semibold text-brand-purple hover:bg-violet-50">{visible ? 'Ocultar' : 'Mostrar'}</button>
       </div>
       {!confirm && <p id={`${id}-hint`} className="mt-2 !mb-0 text-xs !leading-5">Use pelo menos 8 caracteres.</p>}
@@ -18,13 +19,13 @@ function PasswordField({ id, label, confirm = false }: { id: string; label: stri
 
 export function AuthPage({ mode }: { mode: 'login' | 'cadastro' }) {
   const signup = mode === 'cadastro';
-  const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) return;
     setError('');
-    setNotice('');
     const data = new FormData(event.currentTarget);
     if (signup && !String(data.get('name') ?? '').trim()) {
       setError('Informe seu nome.');
@@ -36,9 +37,12 @@ export function AuthPage({ mode }: { mode: 'login' | 'cadastro' }) {
       event.currentTarget.querySelector<HTMLInputElement>('#confirm-password')?.focus();
       return;
     }
-    setNotice(signup
-      ? 'Os dados foram validados. A criação da conta estará disponível quando a integração com o servidor for concluída. Nenhuma conta foi criada.'
-      : 'Os campos foram validados. O acesso à conta estará disponível quando a integração com o servidor for concluída.');
+    setPending(true);
+    try {
+      await authenticate(mode, { email: String(data.get('email') ?? ''), password: String(data.get(signup ? 'signup-password' : 'login-password') ?? ''), ...(signup ? { name: String(data.get('name') ?? '').trim() } : {}) });
+      window.location.hash = '/busca';
+    } catch (error) { setError(error instanceof Error ? error.message : 'Não foi possível acessar sua conta.'); }
+    finally { setPending(false); }
   }
 
   return (
@@ -63,23 +67,21 @@ export function AuthPage({ mode }: { mode: 'login' | 'cadastro' }) {
         <h1 id="auth-title" className="mt-3 !mb-3 !text-3xl">{signup ? 'Crie sua conta' : 'Entre na sua conta'}</h1>
         <p className="!mb-7 text-sm">{signup ? 'Preencha seus dados para começar sua jornada no SaveMe Games.' : 'Informe seu e-mail e sua senha para continuar.'}</p>
 
-        <form onSubmit={submit} onChange={() => { setError(''); setNotice(''); }} className="space-y-5">
+        <form onSubmit={submit} aria-busy={pending} onChange={() => setError('')} className="space-y-5">
           {signup && <div>
             <label htmlFor="name" className="mb-2 block text-sm font-semibold">Nome</label>
             <input id="name" name="name" autoComplete="name" required maxLength={100} placeholder="Como podemos chamar você?" className={inputClass} />
           </div>}
           <div>
             <label htmlFor="email" className="mb-2 block text-sm font-semibold">E-mail</label>
-            <input id="email" name="email" type="email" autoComplete="email" required placeholder="voce@exemplo.com" className={inputClass} />
+            <input id="email" name="email" type="email" autoComplete="email" required maxLength={254} placeholder="voce@exemplo.com" className={inputClass} />
           </div>
           <PasswordField id={signup ? 'signup-password' : 'login-password'} label="Senha" />
           {signup && <PasswordField id="confirm-password" label="Confirmar senha" confirm />}
 
           {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>}
-          {notice && <div role="status" className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900">{notice}</div>}
 
-          <button type="submit" className="flex w-full items-center justify-center gap-3 rounded-xl bg-brand-purple px-5 py-3.5 font-semibold text-white transition-colors hover:bg-violet-900">{signup ? 'Criar conta' : 'Entrar'} <span aria-hidden="true">→</span></button>
-          <p className="!mb-0 text-center text-xs !leading-5">Em desenvolvimento: {signup ? 'o cadastro' : 'o login'} ainda não está conectado ao servidor.</p>
+          <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-3 rounded-xl bg-brand-purple px-5 py-3.5 font-semibold text-white transition-colors hover:bg-violet-900 disabled:cursor-wait disabled:opacity-60">{pending ? 'Aguarde…' : signup ? 'Criar conta' : 'Entrar'} <span aria-hidden="true">→</span></button>
         </form>
 
         <div className="mt-7 border-t border-slate-200 pt-6 text-center text-sm text-slate-600">

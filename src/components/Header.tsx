@@ -1,11 +1,22 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import { Brand } from './Brand';
+import { logout, restoreSession, useUser } from '../services/auth';
 
 interface HeaderProps { currentPath: string; }
 const navigation = [['/', 'Início'], ['/busca', 'Buscar jogos'], ['/comparacao', 'Comparar preços']] as const;
 
 export function Header({ currentPath }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const user = useUser();
+  const [authError, setAuthError] = useState('');
+  const [leaving, setLeaving] = useState(false);
+  useEffect(() => { void restoreSession(); }, []);
+  async function signOut() {
+    setLeaving(true); setAuthError('');
+    try { await logout(); setMenuOpen(false); window.location.hash = '/login'; }
+    catch (error) { setAuthError(error instanceof Error ? error.message : 'Não foi possível sair.'); }
+    finally { setLeaving(false); }
+  }
   const menuButton = useRef<HTMLButtonElement>(null);
   useEffect(() => { setMenuOpen(false); }, [currentPath]);
 
@@ -30,8 +41,10 @@ export function Header({ currentPath }: HeaderProps) {
           ))}
         </nav>
         <div className="hidden items-center gap-6 md:flex">
+          {user ? <><span className="max-w-40 truncate text-sm text-slate-600">Olá, {user.name}</span><button type="button" disabled={leaving} onClick={signOut} className="rounded-lg bg-brand-purple px-5 py-3 text-sm font-semibold text-white">{leaving ? 'Saindo…' : 'Sair'}</button></> : <>
           <a href="#/login" aria-current={currentPath === '/login' ? 'page' : undefined} className="rounded-sm text-sm font-semibold text-slate-600 transition-colors hover:text-brand-purple aria-[current=page]:text-brand-purple">Entrar</a>
           <a href="#/cadastro" aria-current={currentPath === '/cadastro' ? 'page' : undefined} className="rounded-lg bg-brand-purple px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-900">Criar conta <span aria-hidden="true" className="ml-2">↗</span></a>
+          </>}
         </div>
         <button ref={menuButton} type="button" aria-expanded={menuOpen} aria-controls="menu-mobile" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} onClick={() => setMenuOpen(!menuOpen)} className="flex size-11 items-center justify-center rounded-lg border border-slate-200 text-night hover:bg-cloud md:hidden">
           <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
@@ -40,10 +53,12 @@ export function Header({ currentPath }: HeaderProps) {
         </button>
       </div>
       <nav id="menu-mobile" aria-label="Navegação móvel" hidden={!menuOpen} className="border-t border-slate-100 px-6 pb-6 pt-3 md:hidden">
-        {[...navigation, ['/login', 'Entrar'], ['/cadastro', 'Criar conta']].map(([href, label]) => (
+        {[...navigation, ...(user ? [] : [['/login', 'Entrar'], ['/cadastro', 'Criar conta']])].map(([href, label]) => (
           <a key={href} href={`#${href}`} onClick={() => setMenuOpen(false)} aria-current={currentPath === href ? 'page' : undefined} className="block rounded-lg px-4 py-3 text-sm font-medium text-slate-600 hover:bg-cloud aria-[current=page]:bg-violet-50 aria-[current=page]:text-brand-purple">{label}</a>
         ))}
+        {user && <div className="px-4 py-3 text-sm"><p>Olá, {user.name}</p><button type="button" disabled={leaving} onClick={signOut} className="font-semibold text-brand-purple">{leaving ? 'Saindo…' : 'Sair'}</button></div>}
       </nav>
+      {authError && <p role="alert" className="px-6 py-3 text-sm text-red-800">{authError}</p>}
     </header>
   );
 }
