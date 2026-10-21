@@ -1,19 +1,20 @@
 export interface SearchItem {
   appId: number; nome: string; imagem: string | null; link: string;
   precoCentavos?: number | null; precoOriginalCentavos?: number | null; descontoPercentual?: number | null;
-  metacritic?: number | null; sistemas?: string[];
+  metacritic?: number | null; sistemas?: string[]; generos?: string[];
+  situacaoPreco?: 'informado' | 'gratuito' | 'indisponivel';
 }
 export interface GameDetails extends SearchItem {
   tipo: string | null; loja: string; regiao: string; moeda: string | null;
   generos?: string[]; desenvolvedoras?: string[]; lancamento?: string | null; emBreve?: boolean;
   precoCentavos: number | null; situacaoPreco: 'informado' | 'gratuito' | 'indisponivel'; consultadoEm: string;
 }
-interface SearchResponse { termo: string; resultados: SearchItem[]; }
+interface SearchResponse { termo: string; resultados: SearchItem[]; proximaPagina?: number | null; total?: number; }
 const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 async function request<T>(path: string, signal: AbortSignal): Promise<T> {
   try {
-    const response = await fetch(`${base}${path}`, { signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]) });
+    const response = await fetch(`${base}${path}`, { signal: AbortSignal.any([signal, AbortSignal.timeout(25000)]) });
     if (!response.ok) {
       if (response.status === 404) throw new Error('Este conteúdo está indisponível nesta consulta.');
       if (response.status === 400) throw new Error('Confira os dados da pesquisa e tente novamente.');
@@ -34,6 +35,12 @@ export async function searchGames(term: string, signal: AbortSignal): Promise<Se
   if (!data || !Array.isArray(data.resultados) || data.resultados.some(item => !item || !Number.isSafeInteger(item.appId) || item.appId <= 0 || typeof item.nome !== 'string')) {
     throw new Error('A busca retornou dados inválidos. Tente novamente.');
   }
+  return data;
+}
+
+export async function getFeatured(signal: AbortSignal, page = 1): Promise<SearchResponse> {
+  const data = await request<SearchResponse>(`/steam/featured${page > 1 ? `?page=${page}` : ''}`, signal);
+  if (!data || !Array.isArray(data.resultados)) throw new Error('Não foi possível carregar a seleção de jogos.');
   return data;
 }
 

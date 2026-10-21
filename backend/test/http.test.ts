@@ -50,7 +50,7 @@ test('sem correspondência retorna 200 com lista vazia', async () => {
 });
 test('entradas inválidas retornam 400 sem acessar fonte', async () => {
   const count = calls;
-  for (const path of ['/steam/games', '/steam/games?q=a', '/steam/games?q=aa&q=bb', '/steam/games/abc']) {
+  for (const path of ['/steam/games', '/steam/games?q=a', '/steam/games?q=aa&q=bb', '/steam/games/abc', '/steam/featured?page=0', '/steam/featured?page=x']) {
     assert.equal((await fetch(`${base}${path}`)).status, 400);
   }
   assert.equal(calls, count);
