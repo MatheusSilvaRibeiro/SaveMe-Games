@@ -1,0 +1,31 @@
+{
+    "name": "saveme-games",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "node tools/dev.mjs",
+        "build": "tsc --noEmit && vite build",
+        "preview": "vite preview --host 127.0.0.1",
+        "typecheck": "tsc --noEmit",
+        "test:e2e": "playwright test",
+        "dev:web": "vite --host 127.0.0.1",
+        "dev:api": "npm run dev --prefix backend",
+        "setup": "npm ci && npm ci --prefix backend && npm run prisma:generate --prefix backend"
+    },
+    "dependencies": {
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.64.1",
+        "@tailwindcss/vite": "^4.3.3",
+        "@types/node": "^22.20.5",
+        "@types/react": "^18.3.18",
+        "@types/react-dom": "^18.3.5",
+        "@vitejs/plugin-react": "^4.3.4",
+        "tailwindcss": "^4.3.3",
+        "typescript": "~5.7.3",
+        "vite": "^6.1.0"
+    }
+}
