@@ -54,14 +54,16 @@ test('jogo não associado não consulta fontes; cache deduplica e retorna cópia
   let calls = 0;
   const client = createComparisonService(fileGameAssociations, { steam: async () => { calls++; return steam; }, epic: async () => epic });
   await assert.rejects(client.compare('unknown'), (error: unknown) => (error as { getStatus(): number }).getStatus() === 404);
+  await assert.rejects(client.compareBySteamAppId('1'), (error: unknown) => (error as { getStatus(): number }).getStatus() === 404);
   assert.equal(calls, 0);
-  const [first] = await Promise.all([client.compare('hades'), client.compare('hades')]);
+  const [first, bySteam] = await Promise.all([client.compare('hades'), client.compareBySteamAppId(String(steam.appId))]);
+  assert.deepEqual(bySteam, first);
   first.ofertas[0].precoCentavos = 1;
   assert.equal((await client.compare('hades')).menorPrecoCentavos, 7399);
   assert.equal(calls, 1);
 });
 test('rota HTTP lista associações e compara sem conexão com o banco', async () => {
-  const app = await createApp({ buscarJogos: async () => ({}), consultarJogo: async () => steam }, { search: async () => ({}), list: async () => ({}), details: async () => epic });
+  const app = await createApp({ buscarJogos: async () => ({}), consultarJogo: async () => steam }, { search: async () => ({}), list: async () => ({}), details: async () => epic }, fileGameAssociations);
   try {
     await app.listen(0, '127.0.0.1');
     const base = `${await app.getUrl()}/api/comparisons`;
@@ -69,7 +71,15 @@ test('rota HTTP lista associações e compara sem conexão com o banco', async (
     assert.equal(games[0].id, 'hades');
     const response = await fetch(`${base}/hades`);
     assert.equal(response.status, 200);
-    assert.equal((await response.json()).economiaCentavos, 2600);
+    const result = await response.json();
+    assert.equal(result.economiaCentavos, 2600);
+    const bySteam = await fetch(`${base}/steam/${steam.appId}`);
+    assert.equal(bySteam.status, 200);
+    assert.deepEqual(await bySteam.json(), result);
+    assert.equal((await fetch(`${base}/steam/1`)).status, 404);
+    for (const invalidAppId of ['0', '-1', 'hades', '9007199254740992']) {
+      assert.equal((await fetch(`${base}/steam/${invalidAppId}`)).status, 400);
+    }
     assert.equal((await fetch(`${base}/unknown`)).status, 404);
     assert.equal((await fetch(`${base}/INVALID`)).status, 400);
   } finally { await app.close(); }

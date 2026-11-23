@@ -45,7 +45,14 @@ export async function startDevelopment({ apiPort = Number(process.env.API_PORT ?
   function launch(args, cwd, managed = true) {
     const child = spawn(process.execPath, args, {
       cwd, stdio: 'inherit', windowsHide: true,
-      env: { ...process.env, API_PORT: String(apiPort), WEB_PORT: String(webPort) },
+      env: {
+        ...process.env,
+        PORT: String(apiPort),
+        API_PORT: String(apiPort),
+        API_HOST: '127.0.0.1',
+        SERVE_WEB: 'false',
+        WEB_PORT: String(webPort),
+      },
     });
     children.add(child);
     child.once('exit', code => {

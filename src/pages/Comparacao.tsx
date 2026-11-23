@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { compareGame, getComparableGames, type ComparableGame, type Comparison } from '../services/comparison';
+import { FavoriteButton } from '../components/FavoriteButton';
+import { PriceHistory } from '../components/PriceHistory';
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatPrice = (value: number) => value === 0 ? 'Grátis nesta oferta' : money.format(value / 100);
 export function Comparacao() {
@@ -38,6 +40,7 @@ export function Comparacao() {
     {comparison && <>
       {comparison.jogo.imagem && <img src={comparison.jogo.imagem} alt="" className="mb-5 aspect-[231/87] w-full max-w-md rounded-xl object-cover" />}
       <p className="text-sm">{comparison.jogo.edicao} · {comparison.jogo.plataforma} · Brasil · BRL</p>
+      <FavoriteButton game={comparison.jogo} />
       <section aria-label="Resultado da comparação" className="my-6 rounded-2xl border border-violet-200 bg-violet-50 p-6" aria-live="polite">
         {comparison.situacao === 'comparavel' && comparison.menorPrecoCentavos !== null ? <>
           <h2 className="text-lg font-semibold">{comparison.lojasMenorPreco.length > 1 ? 'Mesmo preço nas duas lojas' : `Menor preço consultado: ${comparison.lojasMenorPreco[0]}`}</h2>
@@ -59,6 +62,7 @@ export function Comparacao() {
         <a href={offer.link} target="_blank" rel="noopener noreferrer" className="mt-auto inline-flex w-full justify-center rounded-xl bg-brand-purple px-5 py-3 !text-white">Ver {offer.loja === 'Steam' ? 'na Steam' : 'na Epic'} ↗</a>
       </li>)}</ul>
       <p className="mt-6 text-sm">Cada loja utiliza seu próprio aplicativo. Confira preço, edição e condições na loja antes de comprar. As consultas podem usar cache por até cinco minutos.</p>
+      <PriceHistory gameId={comparison.jogo.id} />
       <button type="button" onClick={() => setRetry(value => value + 1)} className="mb-6 rounded-lg border border-slate-300 bg-white px-4 py-2">Consultar novamente</button>
     </>}
     <div className="mt-6 flex flex-wrap gap-6">{id && <a href="#/comparacao">Ver jogos disponíveis para comparar</a>}<a href="#/busca">Voltar à busca</a></div>

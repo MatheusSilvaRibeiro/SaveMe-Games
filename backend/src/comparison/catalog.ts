@@ -12,9 +12,11 @@ export interface GameAssociation {
 export interface GameAssociationRepository {
   list(): Promise<GameAssociation[]>;
   findById(id: string): Promise<GameAssociation | null>;
+  findBySteamAppId(appId: number): Promise<GameAssociation | null>;
 }
-// Lido a cada consulta: novas associações entram sem rebuild ou reinício da API.
+// Repositório de fixture para testes que injetam explicitamente o catálogo.
 export const fileGameAssociations: GameAssociationRepository = {
   async list() { return readAssociations() as Promise<GameAssociation[]>; },
   async findById(id) { return (await this.list()).find(game => game.id === id) ?? null; },
+  async findBySteamAppId(appId) { return (await this.list()).find(game => game.steam.appId === appId) ?? null; },
 };

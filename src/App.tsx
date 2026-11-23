@@ -6,6 +6,8 @@ import { Login } from './pages/Login';
 import { Cadastro } from './pages/Cadastro';
 import { Busca } from './pages/Busca';
 import { Comparacao } from './pages/Comparacao';
+import { Favoritos } from './pages/Favoritos';
+import { Avisos } from './pages/Avisos';
 
 const pages = {
   '/': Home,
@@ -13,6 +15,8 @@ const pages = {
   '/cadastro': Cadastro,
   '/busca': Busca,
   '/comparacao': Comparacao,
+  '/favoritos': Favoritos,
+  '/avisos': Avisos,
 };
 
 function getPath() {
