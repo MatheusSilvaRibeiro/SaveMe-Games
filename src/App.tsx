@@ -32,7 +32,8 @@ export function App() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  const route = path.startsWith('/comparacao/') ? '/comparacao' : path;
+  const [pathname = '/'] = path.split('?', 1);
+  const route = pathname.startsWith('/comparacao/') ? '/comparacao' : pathname;
   const Page = Object.hasOwn(pages, route) ? pages[route as keyof typeof pages] : null;
 
   return (

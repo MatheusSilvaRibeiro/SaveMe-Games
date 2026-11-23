@@ -4,10 +4,14 @@ import { FavoriteButton } from '../components/FavoriteButton';
 import { PriceHistory } from '../components/PriceHistory';
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatPrice = (value: number) => value === 0 ? 'Grátis nesta oferta' : money.format(value / 100);
+const titleKey = (value: string) => value.normalize('NFKC').trim().toLocaleLowerCase('pt-BR');
 export function Comparacao() {
-  const id = window.location.hash.startsWith('#/comparacao/') ? window.location.hash.slice('#/comparacao/'.length) : '';
+  const fragment = window.location.hash.slice(1);
+  const [pathname = ''] = fragment.split('?', 1);
+  const id = pathname.startsWith('/comparacao/') ? pathname.slice('/comparacao/'.length) : '';
+  const initialQuery = new URLSearchParams(fragment.slice(pathname.length)).get('q')?.trim() ?? '';
   const [games, setGames] = useState<ComparableGame[]>([]);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [comparison, setComparison] = useState<Comparison | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,12 +19,24 @@ export function Comparacao() {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(''); setComparison(null);
-    const operation = id ? compareGame(id, controller.signal).then(data => { if (!controller.signal.aborted) setComparison(data); }) : getComparableGames(controller.signal).then(data => { if (!controller.signal.aborted) setGames(data); });
+    const operation = id
+      ? compareGame(id, controller.signal).then(data => { if (!controller.signal.aborted) setComparison(data); })
+      : getComparableGames(controller.signal).then(data => {
+        if (controller.signal.aborted) return;
+        if (initialQuery) {
+          const [match, duplicate] = data.filter(game => titleKey(game.nome) === titleKey(initialQuery));
+          if (match && !duplicate) {
+            window.location.replace(`#/comparacao/${match.id}`);
+            return;
+          }
+        }
+        setGames(data);
+      });
     operation.catch(() => { if (!controller.signal.aborted) setError(id ? 'Não foi possível carregar este jogo para comparação.' : 'Não foi possível carregar os jogos para comparação.'); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [id, retry]);
-  const matches = games.filter(game => game.nome.toLocaleLowerCase('pt-BR').includes(query.trim().toLocaleLowerCase('pt-BR'))).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }, [id, initialQuery, retry]);
+  const matches = games.filter(game => titleKey(game.nome).includes(titleKey(query))).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   return <>
     <h1>{comparison ? comparison.jogo.nome : 'Comparação de preços'}</h1>
     <p>Ofertas do mesmo jogo e edição na Steam e na Epic Games Store, em reais.</p>

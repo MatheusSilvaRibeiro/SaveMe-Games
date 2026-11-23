@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "SaveMe Games",
+  "version": "0.1.0",
+  "description": "Abre a comparação de preços da Steam e da Epic a partir de uma pesquisa no Google.",
+  "content_scripts": [
+    {
+      "matches": ["https://www.google.com/search*", "https://www.google.com.br/search*"],
+      "js": ["google-search.js"],
+      "css": ["google-search.css"]
+    }
+  ]
+}

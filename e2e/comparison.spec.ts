@@ -21,6 +21,14 @@ test('seleciona jogo conferido e compara em página própria no celular', async 
  await expect(page.getByRole('link', { name: 'Ver na Epic ↗' })).toHaveAttribute('href', epic.link);
  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+test('link da extensão compara apenas uma correspondência exata', async ({ page }) => {
+ await page.goto('/#/comparacao?q=hade');
+ await expect(page.getByLabel('Qual jogo você quer comparar?')).toHaveValue('hade');
+ await expect(page.getByRole('link', { name: 'Comparar preços de Hades →' })).toBeVisible();
+ await page.goto('/#/comparacao?q=Hades');
+ await expect(page).toHaveURL(/#\/comparacao\/hades$/);
+ await expect(page.getByRole('region', { name: 'Resultado da comparação' })).toContainText('Menor preço consultado: Epic Games Store');
+});
 test('busca sem associação explica cobertura sem adivinhar correspondência', async ({ page }) => {
  await page.goto('/#/comparacao');
  await page.getByLabel('Qual jogo você quer comparar?').fill('Outro jogo');
