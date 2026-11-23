@@ -27,3 +27,67 @@ model Session {
   @@index([expiresAt])
   @@map("sessions")
 }
+
+enum StoreCode {
+  steam
+  epic
+}
+
+enum PriceState {
+  available
+  price_missing
+  unavailable
+}
+
+model Game {
+  id           String       @id @db.VarChar(100)
+  name         String       @db.VarChar(200)
+  edition      String       @db.VarChar(100)
+  platform     String       @db.VarChar(30)
+  imageUrl     String?
+  catalogOrder Int          @default(0)
+  offers       StoreOffer[]
+
+  @@map("games")
+}
+
+model Store {
+  code   StoreCode    @id
+  name   String       @db.VarChar(100)
+  offers StoreOffer[]
+
+  @@map("stores")
+}
+
+model StoreOffer {
+  id            String             @id @default(uuid()) @db.Uuid
+  gameId        String             @db.VarChar(100)
+  storeCode     StoreCode
+  steamAppId    BigInt?            @unique
+  epicNamespace String?            @db.VarChar(100)
+  epicOfferId   String?            @db.VarChar(100)
+  epicPageSlug  String?            @db.VarChar(100)
+  game          Game               @relation(fields: [gameId], references: [id])
+  store         Store              @relation(fields: [storeCode], references: [code])
+  observations  PriceObservation[]
+
+  @@unique([gameId, storeCode])
+  @@unique([epicNamespace, epicOfferId])
+  @@index([storeCode])
+  @@map("store_offers")
+}
+
+model PriceObservation {
+  id               BigInt     @id @default(autoincrement())
+  offerId          String     @db.Uuid
+  priceCents       BigInt?
+  currency         String     @db.Char(3)
+  region           String     @db.Char(2)
+  state            PriceState
+  collectedAt      DateTime   @db.Timestamptz(3)
+  sourceRecordedAt DateTime?  @db.Timestamptz(3)
+  offer            StoreOffer @relation(fields: [offerId], references: [id])
+
+  @@unique([offerId, region, collectedAt])
+  @@map("price_observations")
+}

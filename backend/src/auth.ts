@@ -122,5 +122,5 @@ export class AuthController {
   @Post('logout') @HttpCode(200) logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) { this.checkOrigin(req); return this.auth.logout(req, res); }
 }
 
-@Module({ controllers: [AuthController], providers: [DatabaseService, AuthService] })
+@Module({ controllers: [AuthController], providers: [DatabaseService, AuthService], exports: [DatabaseService] })
 export class AuthModule {}

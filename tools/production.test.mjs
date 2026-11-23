@@ -15,11 +15,13 @@ for (const portVariable of ['PORT', 'API_PORT']) {
     await new Promise(resolve => probe.close(resolve));
 
     const origin = 'https://saveme.example';
+    const catalogDatabase = process.env.CATALOG_TEST_DATABASE_URL;
     const env = {
       ...process.env,
       API_HOST: '127.0.0.1',
       API_PORT: 'invalid',
       AUTH_ORIGINS: origin,
+      DATABASE_URL: catalogDatabase ?? '',
       NODE_ENV: 'production',
       SERVE_WEB: 'true',
       TRUST_PROXY_HOPS: '0',
@@ -67,9 +69,14 @@ for (const portVariable of ['PORT', 'API_PORT']) {
       }
 
       const catalog = await fetch(`${base}/api/comparisons/games`);
-      assert.equal(catalog.status, 200);
-      const games = await catalog.json();
-      assert.deepEqual(games.map(game => game.id).sort(), ['among-us', 'celeste', 'dead-cells', 'hades', 'hades-ii']);
+      if (catalogDatabase) {
+        assert.equal(catalog.status, 200);
+        const games = await catalog.json();
+        assert.deepEqual(games.map(game => game.id).sort(), ['among-us', 'celeste', 'dead-cells', 'hades', 'hades-ii']);
+      } else {
+        assert.equal(catalog.status, 503);
+        assert.equal((await catalog.json()).code, 'CATALOG_UNAVAILABLE');
+      }
       assert.equal((await fetch(`${base}/api/does-not-exist`)).status, 404);
       assert.equal((await fetch(`${base}/api/auth/me`)).status, 401);
 

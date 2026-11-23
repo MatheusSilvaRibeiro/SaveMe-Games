@@ -1,12 +1,14 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import 'reflect-metadata';
-import { fileGameAssociations } from './comparison/catalog.js';
+import type { GameAssociationRepository } from './comparison/catalog.js';
+import { PrismaGameAssociations } from './comparison/prisma-catalog.js';
 import { createComparisonService } from './comparison/service.js';
 import { createEpicCatalog } from '../../tools/epic/epic-catalog.mjs';
 import { EpicError } from '../../tools/epic/epic-probe.mjs';
 import { Controller, Get, HttpException, Inject, Injectable, Module, Param, Query } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth.js';
+import { DatabaseService } from './database.js';
 import { createCatalog } from '../../tools/steam/steam-catalog.mjs';
 import { buscarJogos } from '../../tools/steam/steam-search.mjs';
 import { consultarJogo, SteamError } from '../../tools/steam/steam-probe.mjs';
@@ -24,6 +26,7 @@ const COMPARISON_SERVICE = Symbol('COMPARISON_SERVICE');
 class ComparisonController {
   constructor(@Inject(COMPARISON_SERVICE) private readonly comparison: ReturnType<typeof createComparisonService>) {}
   @Get('games') list() { return this.comparison.list(); }
+  @Get('steam/:appId') compareSteam(@Param('appId') appId: string) { return this.comparison.compareBySteamAppId(appId); }
   @Get(':gameId') compare(@Param('gameId') id: string) { return this.comparison.compare(id); }
 }
 interface EpicClient {
@@ -109,7 +112,11 @@ class HealthController {
   @Get() health() { return { status: 'ok', service: 'saveme-api', steam: 'not_checked' }; }
 }
 
-export async function createApp(client?: SteamClient, epicClient: EpicClient = createEpicCatalog()) {
+export async function createApp(
+  client?: SteamClient,
+  epicClient: EpicClient = createEpicCatalog(),
+  associations?: GameAssociationRepository,
+) {
   const catalog = createCatalog();
   const steamClient: SteamClient = client ?? {
     buscarJogos: async term => catalog.enrich(await buscarJogos(term)),
@@ -119,7 +126,23 @@ export async function createApp(client?: SteamClient, epicClient: EpicClient = c
   @Module({
     imports: [AuthModule],
     controllers: [SteamController, HealthController, EpicController, ComparisonController],
-    providers: [{ provide: COMPARISON_SERVICE, useValue: createComparisonService(fileGameAssociations, { steam: id => steamClient.consultarJogo(id), epic: id => epicClient.details(id) }) }, { provide: EPIC_CLIENT, useValue: epicClient }, SteamService, { provide: STEAM_CLIENT, useValue: steamClient }],
+    providers: [
+      {
+        provide: COMPARISON_SERVICE,
+        inject: [DatabaseService],
+        useFactory: (db: DatabaseService) => {
+          const prismaCatalog = new PrismaGameAssociations(db);
+          return createComparisonService(
+            associations ?? prismaCatalog,
+            { steam: id => steamClient.consultarJogo(id), epic: id => epicClient.details(id) },
+            associations ? undefined : result => prismaCatalog.recordPrices(result),
+          );
+        },
+      },
+      { provide: EPIC_CLIENT, useValue: epicClient },
+      SteamService,
+      { provide: STEAM_CLIENT, useValue: steamClient },
+    ],
   })
   class AppModule {}
 
