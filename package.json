@@ -16,6 +16,7 @@
         "start:production": "node tools/start-production.mjs",
         "db:migrate": "npm run db:migrate --prefix backend",
         "db:seed:catalog": "npm run db:seed:catalog --prefix backend",
+        "prices:collect": "npm run prices:collect --prefix backend",
         "test:production": "node --test tools/production.test.mjs"
     },
     "dependencies": {

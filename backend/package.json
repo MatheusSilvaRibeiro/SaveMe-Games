@@ -13,9 +13,10 @@
     "test": "npm run build && node --test dist/backend/test/*.test.js",
     "prisma:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
+    "db:seed:catalog": "node dist/backend/src/comparison/seed.js",
+    "prices:collect": "node dist/backend/src/comparison/collect-prices-cli.js",
     "db:status": "prisma migrate status",
-    "test:auth": "npm run build && node --test dist/backend/test/auth.test.js",
-    "db:seed:catalog": "node dist/backend/src/comparison/seed.js"
+    "test:auth": "npm run build && node --test dist/backend/test/auth.test.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.11",

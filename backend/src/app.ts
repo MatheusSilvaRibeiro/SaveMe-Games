@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import type { GameAssociationRepository } from './comparison/catalog.js';
 import { PrismaGameAssociations } from './comparison/prisma-catalog.js';
 import { createComparisonService } from './comparison/service.js';
+import { PriceHistoryController } from './comparison/history.js';
 import { createEpicCatalog } from '../../tools/epic/epic-catalog.mjs';
 import { EpicError } from '../../tools/epic/epic-probe.mjs';
 import { Controller, Get, HttpException, Inject, Injectable, Module, Param, Query } from '@nestjs/common';
@@ -126,7 +127,7 @@ export async function createApp(
   };
   @Module({
     imports: [AuthModule],
-    controllers: [SteamController, HealthController, EpicController, ComparisonController, FavoritesController],
+    controllers: [SteamController, HealthController, EpicController, ComparisonController, PriceHistoryController, FavoritesController],
     providers: [
       {
         provide: COMPARISON_SERVICE,
