@@ -14,6 +14,7 @@ model User {
   createdAt    DateTime  @default(now()) @db.Timestamptz(3)
   sessions     Session[]
   favorites    Favorite[]
+  priceAlerts  PriceAlert[]
 
   @@map("users")
 }
@@ -101,7 +102,34 @@ model PriceObservation {
   collectedAt      DateTime   @db.Timestamptz(3)
   sourceRecordedAt DateTime?  @db.Timestamptz(3)
   offer            StoreOffer @relation(fields: [offerId], references: [id])
+  alerts           PriceAlert[]
 
   @@unique([offerId, region, collectedAt])
+  @@index([offerId, region, currency, state, collectedAt], map: "price_observations_alert_baseline_idx")
   @@map("price_observations")
+}
+
+model PriceAlert {
+  id                 BigInt           @id @default(autoincrement())
+  userId             String           @db.Uuid
+  offerId            String           @db.Uuid
+  observationId      BigInt
+  gameId             String           @db.VarChar(100)
+  gameName           String           @db.VarChar(200)
+  store              StoreCode
+  storeUrl           String
+  region             String           @db.Char(2)
+  currency           String           @db.Char(3)
+  previousPriceCents BigInt
+  newPriceCents      BigInt
+  observedAt         DateTime         @db.Timestamptz(3)
+  readAt             DateTime?        @db.Timestamptz(3)
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  observation        PriceObservation @relation(fields: [observationId], references: [id])
+
+  @@unique([userId, offerId, observationId])
+  @@index([userId, id])
+  @@index([userId, readAt])
+  @@index([observationId])
+  @@map("price_alerts")
 }

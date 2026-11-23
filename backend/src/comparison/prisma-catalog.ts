@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import type { DatabaseService } from '../database.js';
 import type { GameAssociation, GameAssociationRepository } from './catalog.js';
 import type { ComparisonResult } from './service.js';
-import { observationFromOffer } from './price-observation.js';
+import { observationFromOffer, persistPriceObservations } from './price-observation.js';
 
 type GameWithOffers = Prisma.GameGetPayload<{ include: { offers: true } }>;
 
@@ -74,7 +74,7 @@ export class PrismaGameAssociations implements GameAssociationRepository {
         if (!identity) throw new Error('A associação mudou durante a comparação.');
         return { offerId: identity.id, ...observation };
       });
-      await tx.priceObservation.createMany({ data, skipDuplicates: true });
-    }));
+      await persistPriceObservations(tx, data);
+    }, { isolationLevel: 'ReadCommitted' }));
   }
 }

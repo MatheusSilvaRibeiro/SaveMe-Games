@@ -1,7 +1,7 @@
 import { consultarOfertaEpic } from '../../../tools/epic/epic-details.mjs';
 import { consultarJogo } from '../../../tools/steam/steam-probe.mjs';
 import type { DatabaseService } from '../database.js';
-import { observationFromOffer, offerIdentity } from './price-observation.js';
+import { observationFromOffer, offerIdentity, persistPriceObservations } from './price-observation.js';
 import { isUnavailable, normalizeOffer, unavailableOffer, type OfferIdentity } from './service.js';
 
 const concurrency = 3;
@@ -63,7 +63,7 @@ export async function collectPrices(
       const data = (await Promise.all(batch.map(observe))).filter(row => row !== null);
       processed += batch.length;
       sampled += data.length;
-      if (data.length) inserted += (await tx.priceObservation.createMany({ data, skipDuplicates: true })).count;
+      if (data.length) inserted += await db.$transaction(batchTx => persistPriceObservations(batchTx, data), { isolationLevel: 'ReadCommitted' });
     }
     return {
       status: 'completed' as const, offers: offers.length, processed,

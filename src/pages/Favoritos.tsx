@@ -8,6 +8,7 @@ export function Favoritos() {
 
   return <>
     <h1>Meus favoritos</h1>
+    <p>Acompanhamos os jogos salvos e mostramos quedas de preço em <a href="#/avisos">Avisos</a> quando uma consulta registra a mudança. A frequência depende das coletas.</p>
     {!sessionReady ? <p role="status">Verificando sua sessão…</p>
       : !user || favorites.sessionExpired ? <p>Entre na sua conta para ver seus favoritos. <a href="#/login">Ir para o login</a></p>
       : favorites.error ? <div>
