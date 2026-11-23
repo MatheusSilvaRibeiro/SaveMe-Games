@@ -1,3 +1,4 @@
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import 'reflect-metadata';
 import { fileGameAssociations } from './comparison/catalog.js';
 import { createComparisonService } from './comparison/service.js';
@@ -122,7 +123,7 @@ export async function createApp(client?: SteamClient, epicClient: EpicClient = c
   })
   class AppModule {}
 
-  const app = await NestFactory.create(AppModule, { logger: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: false });
   app.setGlobalPrefix('api');
   app.enableCors({ origin: (process.env.AUTH_ORIGINS ?? 'http://localhost:5173,http://127.0.0.1:5173').split(',').map(value => value.trim()), credentials: true });
   app.enableShutdownHooks();

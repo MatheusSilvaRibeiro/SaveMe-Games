@@ -11,7 +11,11 @@
         "test:e2e": "playwright test",
         "dev:web": "vite --host 127.0.0.1",
         "dev:api": "npm run dev --prefix backend",
-        "setup": "npm ci && npm ci --prefix backend && npm run prisma:generate --prefix backend"
+        "setup": "npm ci --include=dev && npm ci --include=dev --prefix backend && npm run prisma:generate --prefix backend",
+        "build:production": "npm run build -- --mode cloud && npm run build --prefix backend && node tools/package-web.mjs",
+        "start:production": "node tools/start-production.mjs",
+        "db:migrate": "npm run db:migrate --prefix backend",
+        "test:production": "node --test tools/production.test.mjs"
     },
     "dependencies": {
         "react": "^18.3.1",
