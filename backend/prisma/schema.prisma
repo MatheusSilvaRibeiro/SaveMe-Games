@@ -13,6 +13,7 @@ model User {
   passwordHash String
   createdAt    DateTime  @default(now()) @db.Timestamptz(3)
   sessions     Session[]
+  favorites    Favorite[]
 
   @@map("users")
 }
@@ -47,8 +48,21 @@ model Game {
   imageUrl     String?
   catalogOrder Int          @default(0)
   offers       StoreOffer[]
+  favorites    Favorite[]
 
   @@map("games")
+}
+
+model Favorite {
+  userId    String   @db.Uuid
+  gameId    String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@id([userId, gameId])
+  @@index([gameId])
+  @@map("favorites")
 }
 
 model Store {

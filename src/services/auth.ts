@@ -30,6 +30,9 @@ export async function logout() { await request('logout', {}); update(null); }
 export function useUser() {
   return useSyncExternalStore(listener => { listeners.add(listener); return () => { listeners.delete(listener); }; }, () => user);
 }
+export function useSessionReady() {
+  return useSyncExternalStore(listener => { listeners.add(listener); return () => { listeners.delete(listener); }; }, () => revision > 0);
+}
 export async function restoreSession() {
   if (initialized) return;
   initialized = true;

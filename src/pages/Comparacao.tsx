@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { compareGame, getComparableGames, type ComparableGame, type Comparison } from '../services/comparison';
+import { FavoriteButton } from '../components/FavoriteButton';
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatPrice = (value: number) => value === 0 ? 'Grátis nesta oferta' : money.format(value / 100);
 export function Comparacao() {
@@ -38,6 +39,7 @@ export function Comparacao() {
     {comparison && <>
       {comparison.jogo.imagem && <img src={comparison.jogo.imagem} alt="" className="mb-5 aspect-[231/87] w-full max-w-md rounded-xl object-cover" />}
       <p className="text-sm">{comparison.jogo.edicao} · {comparison.jogo.plataforma} · Brasil · BRL</p>
+      <FavoriteButton game={comparison.jogo} />
       <section aria-label="Resultado da comparação" className="my-6 rounded-2xl border border-violet-200 bg-violet-50 p-6" aria-live="polite">
         {comparison.situacao === 'comparavel' && comparison.menorPrecoCentavos !== null ? <>
           <h2 className="text-lg font-semibold">{comparison.lojasMenorPreco.length > 1 ? 'Mesmo preço nas duas lojas' : `Menor preço consultado: ${comparison.lojasMenorPreco[0]}`}</h2>

@@ -3,7 +3,7 @@ import { Brand } from './Brand';
 import { logout, restoreSession, useUser } from '../services/auth';
 
 interface HeaderProps { currentPath: string; }
-const navigation = [['/', 'Início'], ['/busca', 'Buscar jogos'], ['/comparacao', 'Comparar preços']] as const;
+const navigation = [['/', 'Início'], ['/busca', 'Buscar jogos'], ['/comparacao', 'Comparar preços'], ['/favoritos', 'Favoritos']] as const;
 
 export function Header({ currentPath }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);

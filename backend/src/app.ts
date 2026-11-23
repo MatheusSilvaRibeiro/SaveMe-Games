@@ -9,6 +9,7 @@ import { Controller, Get, HttpException, Inject, Injectable, Module, Param, Quer
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth.js';
 import { DatabaseService } from './database.js';
+import { FavoritesController } from './favorites.js';
 import { createCatalog } from '../../tools/steam/steam-catalog.mjs';
 import { buscarJogos } from '../../tools/steam/steam-search.mjs';
 import { consultarJogo, SteamError } from '../../tools/steam/steam-probe.mjs';
@@ -125,7 +126,7 @@ export async function createApp(
   };
   @Module({
     imports: [AuthModule],
-    controllers: [SteamController, HealthController, EpicController, ComparisonController],
+    controllers: [SteamController, HealthController, EpicController, ComparisonController, FavoritesController],
     providers: [
       {
         provide: COMPARISON_SERVICE,
