@@ -33,6 +33,7 @@ export function normalizarOfertaEpic(offer, consulted = new Date().toISOString()
   return {
     imagem: Array.isArray(offer.keyImages) ? offer.keyImages.find(item => ['OfferImageWide', 'DieselStoreFrontWide', 'Thumbnail'].includes(item?.type) && /^https:\/\//.test(item?.url))?.url ?? null : null,
     id: offer.id, namespace: offer.namespace, nome: offer.title, tipoOferta: offer.offerType,
+    desenvolvedoras: typeof offer.developerDisplayName === 'string' && offer.developerDisplayName.trim() ? [offer.developerDisplayName] : [],
     disponibilidade, somenteMobile: mobileOnly, sistemas: systems,
     precoOriginalCentavos: original, descontoPercentual: original !== null ? Math.round((1 - cents / original) * 100) : null,
     emBreve: upcoming && offer.prePurchase !== true,

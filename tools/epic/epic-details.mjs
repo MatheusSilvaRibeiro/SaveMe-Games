@@ -18,6 +18,9 @@ async function readResource(path, { fetchImpl, timeoutMs }, priceResource = fals
   }
 }
 
+/** @param {string} offerId
+ * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number, namespaceEsperado?: string }} [options]
+ */
 export async function consultarOfertaEpic(offerId, { fetchImpl = fetch, timeoutMs = 10000, namespaceEsperado } = {}) {
   if (typeof offerId !== 'string' || !/^[a-z0-9-]{1,100}$/i.test(offerId)) {
     throw new EpicError('INVALID_ID', 'Identificador de oferta inválido.');

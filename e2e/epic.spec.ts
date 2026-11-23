@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 const game = { appId: 504230, nome: 'Celeste', imagem: null, link: 'https://store.steampowered.com/app/504230/', tipo: 'game', loja: 'Steam', regiao: 'BR', moeda: 'BRL', precoCentavos: 9999, situacaoPreco: 'informado', consultadoEm: '2026-10-20T20:00:00Z' };
 const offer = { id: 'celeste-offer', namespace: 'celeste', nome: 'Celeste', imagem: null, precoCentavos: 7399, moeda: 'BRL', fonte: 'EGData', link: 'https://store.epicgames.com/pt-BR/p/celeste', consultadoEm: game.consultadoEm, registroPrecoEm: '2026-01-08T16:09:34Z', generos: ['Ação'] };
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/comparisons/games', route => route.fulfill({ json: [] }));
   await page.route('**/api/steam/featured', route => route.fulfill({ json: { resultados: [game] } }));
   await page.route('**/api/steam/games?*', route => route.fulfill({ json: { resultados: [game] } }));
   await page.route('**/api/steam/games/504230', route => route.fulfill({ json: game }));

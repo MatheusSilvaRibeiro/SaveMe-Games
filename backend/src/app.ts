@@ -1,9 +1,17 @@
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import 'reflect-metadata';
+import type { GameAssociationRepository } from './comparison/catalog.js';
+import { PrismaGameAssociations } from './comparison/prisma-catalog.js';
+import { createComparisonService } from './comparison/service.js';
+import { PriceHistoryController } from './comparison/history.js';
 import { createEpicCatalog } from '../../tools/epic/epic-catalog.mjs';
 import { EpicError } from '../../tools/epic/epic-probe.mjs';
 import { Controller, Get, HttpException, Inject, Injectable, Module, Param, Query } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth.js';
+import { DatabaseService } from './database.js';
+import { FavoritesController } from './favorites.js';
+import { PriceAlertsController } from './price-alerts.js';
 import { createCatalog } from '../../tools/steam/steam-catalog.mjs';
 import { buscarJogos } from '../../tools/steam/steam-search.mjs';
 import { consultarJogo, SteamError } from '../../tools/steam/steam-probe.mjs';
@@ -16,6 +24,14 @@ export interface SteamClient {
 }
 const STEAM_CLIENT = Symbol('STEAM_CLIENT');
 const EPIC_CLIENT = Symbol('EPIC_CLIENT');
+const COMPARISON_SERVICE = Symbol('COMPARISON_SERVICE');
+@Controller('comparisons')
+class ComparisonController {
+  constructor(@Inject(COMPARISON_SERVICE) private readonly comparison: ReturnType<typeof createComparisonService>) {}
+  @Get('games') list() { return this.comparison.list(); }
+  @Get('steam/:appId') compareSteam(@Param('appId') appId: string) { return this.comparison.compareBySteamAppId(appId); }
+  @Get(':gameId') compare(@Param('gameId') id: string) { return this.comparison.compare(id); }
+}
 interface EpicClient {
   search(term: string, options?: { page?: number }): Promise<unknown>;
   list(options?: { page?: number }): Promise<unknown>;
@@ -99,7 +115,11 @@ class HealthController {
   @Get() health() { return { status: 'ok', service: 'saveme-api', steam: 'not_checked' }; }
 }
 
-export async function createApp(client?: SteamClient, epicClient: EpicClient = createEpicCatalog()) {
+export async function createApp(
+  client?: SteamClient,
+  epicClient: EpicClient = createEpicCatalog(),
+  associations?: GameAssociationRepository,
+) {
   const catalog = createCatalog();
   const steamClient: SteamClient = client ?? {
     buscarJogos: async term => catalog.enrich(await buscarJogos(term)),
@@ -108,12 +128,28 @@ export async function createApp(client?: SteamClient, epicClient: EpicClient = c
   };
   @Module({
     imports: [AuthModule],
-    controllers: [SteamController, HealthController, EpicController],
-    providers: [{ provide: EPIC_CLIENT, useValue: epicClient }, SteamService, { provide: STEAM_CLIENT, useValue: steamClient }],
+    controllers: [SteamController, HealthController, EpicController, ComparisonController, PriceHistoryController, FavoritesController, PriceAlertsController],
+    providers: [
+      {
+        provide: COMPARISON_SERVICE,
+        inject: [DatabaseService],
+        useFactory: (db: DatabaseService) => {
+          const prismaCatalog = new PrismaGameAssociations(db);
+          return createComparisonService(
+            associations ?? prismaCatalog,
+            { steam: id => steamClient.consultarJogo(id), epic: id => epicClient.details(id) },
+            associations ? undefined : result => prismaCatalog.recordPrices(result),
+          );
+        },
+      },
+      { provide: EPIC_CLIENT, useValue: epicClient },
+      SteamService,
+      { provide: STEAM_CLIENT, useValue: steamClient },
+    ],
   })
   class AppModule {}
 
-  const app = await NestFactory.create(AppModule, { logger: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: false });
   app.setGlobalPrefix('api');
   app.enableCors({ origin: (process.env.AUTH_ORIGINS ?? 'http://localhost:5173,http://127.0.0.1:5173').split(',').map(value => value.trim()), credentials: true });
   app.enableShutdownHooks();

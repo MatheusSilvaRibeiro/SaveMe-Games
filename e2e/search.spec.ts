@@ -94,7 +94,8 @@ test('fluxo real pela API e Steam @live', async ({ page }) => {
   await page.goto('/#/busca');
   await page.getByLabel('Qual jogo você está procurando?').fill('Portal 2');
   await page.getByRole('button', { name: 'Buscar', exact: true }).click();
-  await page.getByRole('button', { name: /Portal 2.*Ver oferta na Steam/ }).click();
+  await page.getByRole('region', { name: 'Resultados da busca' }).getByRole('button')
+    .filter({ has: page.getByText('Portal 2', { exact: true }) }).click();
   await expect(page.getByRole('link', { name: /Ver na Steam/ })).toHaveAttribute('href', item.link, { timeout: 20000 });
   await expect(page.getByRole('dialog')).toContainText('Consultado em');
 });
