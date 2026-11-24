@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { compareGame, getComparableGames, type ComparableGame, type Comparison } from '../services/comparison';
+import { compareGame, getComparableGames, titleKey, type ComparableGame, type Comparison } from '../services/comparison';
 import { FavoriteButton } from '../components/FavoriteButton';
 import { PriceHistory } from '../components/PriceHistory';
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatPrice = (value: number) => value === 0 ? 'Grátis nesta oferta' : money.format(value / 100);
-const titleKey = (value: string) => value.normalize('NFKC').trim().toLocaleLowerCase('pt-BR');
 export function Comparacao() {
   const fragment = window.location.hash.slice(1);
   const [pathname = ''] = fragment.split('?', 1);
@@ -27,6 +26,10 @@ export function Comparacao() {
           const [match, duplicate] = data.filter(game => titleKey(game.nome) === titleKey(initialQuery));
           if (match && !duplicate) {
             window.location.replace(`#/comparacao/${match.id}`);
+            return;
+          }
+          if (!data.some(game => titleKey(game.nome).includes(titleKey(initialQuery)))) {
+            window.location.replace(`#/busca?${new URLSearchParams({ q: initialQuery })}`);
             return;
           }
         }

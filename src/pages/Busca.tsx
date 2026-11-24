@@ -1,4 +1,4 @@
-import { getComparableGames, type ComparableGame } from '../services/comparison';
+import { getComparableGames, titleKey, type ComparableGame } from '../services/comparison';
 import { EpicCatalog } from '../components/EpicCatalog';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { getGame, getFeatured, searchGames, type GameDetails, type SearchItem } from '../services/steam';
@@ -22,7 +22,11 @@ function contentInfo(type: string | null) {
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export function Busca() {
-  const [query, setQuery] = useState('');
+  const [initialQuery] = useState(() => {
+    const [, params] = window.location.hash.split('?');
+    return new URLSearchParams(params).get('q')?.trim() ?? '';
+  });
+  const [query, setQuery] = useState(initialQuery);
   const [comparableGames, setComparableGames] = useState<ComparableGame[]>([]);
   useEffect(() => {
     const controller = new AbortController();
@@ -61,7 +65,11 @@ export function Busca() {
       if (!controller.signal.aborted) setSearchError(errorMessage(error));
     } finally { if (!controller.signal.aborted) setLoading(false); }
   }
-  useEffect(() => { void loadFeatured(); return () => searchRequest.current?.abort(); }, []);
+  useEffect(() => {
+    if (initialQuery) void runSearch(initialQuery, true);
+    else void loadFeatured();
+    return () => searchRequest.current?.abort();
+  }, [initialQuery]);
 
   async function loadMore() {
     if (!nextPage || loadingMore) return;
@@ -86,8 +94,11 @@ export function Busca() {
 
   async function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    await runSearch(query.trim());
+  }
+
+  async function runSearch(term: string, openMatch = false) {
     searchRequest.current?.abort();
-    const term = query.trim();
     setResults([]); setSearchError(''); setSearchedTerm(''); setLoading(false);
     setNextPage(null); setLoadingMore(false); setMoreError(''); setSearching(false);
     setGenre('all'); setPriceFilter('all');
@@ -100,7 +111,13 @@ export function Busca() {
     setEpicTerm(term); setLoading(true); setSearching(true);
     try {
       const response = await searchGames(term, controller.signal);
-      if (!controller.signal.aborted) { setResults(response.resultados); setSearchedTerm(term); }
+      if (controller.signal.aborted) return;
+      setResults(response.resultados);
+      setSearchedTerm(term);
+      if (openMatch) {
+        const [match, duplicate] = response.resultados.filter(game => titleKey(game.nome) === titleKey(term));
+        if (match && !duplicate) openGame(match);
+      }
     } catch (error) {
       if (!controller.signal.aborted) setSearchError(errorMessage(error));
     } finally {

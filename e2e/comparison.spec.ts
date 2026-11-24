@@ -29,6 +29,21 @@ test('link da extensão compara apenas uma correspondência exata', async ({ pag
  await expect(page).toHaveURL(/#\/comparacao\/hades$/);
  await expect(page.getByRole('region', { name: 'Resultado da comparação' })).toContainText('Menor preço consultado: Epic Games Store');
 });
+test('link da extensão abre a oferta Steam quando o jogo não tem comparação', async ({ page }) => {
+ const offer = { appId: 1174180, nome: 'Red Dead Redemption 2', imagem: null, link: 'https://store.steampowered.com/app/1174180/', precoCentavos: 7497 };
+ await page.route('**/api/steam/games?*', route => route.fulfill({ json: { resultados: [offer] } }));
+ await page.route('**/api/steam/games/1174180', route => route.fulfill({ json: { ...offer, tipo: 'game', loja: 'Steam', regiao: 'BR', moeda: 'BRL', situacaoPreco: 'informado', consultadoEm: steam.consultadoEm } }));
+ await page.route('**/api/epic/games?*', route => route.fulfill({ json: { resultados: [] } }));
+ await page.goto('/#/comparacao?q=Red+Dead+Redemption+2');
+ await expect(page).toHaveURL(/#\/busca\?q=/);
+ const dialog = page.getByRole('dialog');
+ await expect(dialog.getByRole('heading', { name: offer.nome })).toBeVisible();
+ await expect(dialog).toContainText(/R\$\s*74,97/);
+ await expect(dialog.getByRole('link', { name: /Ver na Steam/ })).toHaveAttribute('href', offer.link);
+ await dialog.getByRole('button', { name: 'Voltar à busca' }).click();
+ await expect(dialog).toBeHidden();
+ await expect(page.getByRole('searchbox')).toHaveValue(offer.nome);
+});
 test('busca sem associação explica cobertura sem adivinhar correspondência', async ({ page }) => {
  await page.goto('/#/comparacao');
  await page.getByLabel('Qual jogo você quer comparar?').fill('Outro jogo');

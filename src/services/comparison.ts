@@ -1,4 +1,5 @@
 import { request } from './steam';
+export const titleKey = (value: string) => value.normalize('NFKC').trim().toLocaleLowerCase('pt-BR');
 export interface ComparableGame {
   imagem?: string;
   id: string; nome: string; edicao: string; plataforma: 'PC';
