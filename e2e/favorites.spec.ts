@@ -19,6 +19,45 @@ test('visitante recebe orientação de login ao tentar favoritar', async ({ page
   await expect(page).toHaveURL(/#\/login$/);
 });
 
+test('busca compartilha o favorito entre Steam, Epic e a lista da conta', async ({ page }) => {
+  await page.route('**/api/auth/me', route => route.fulfill({ json: { user: { id: 'a', name: 'Conta A' } } }));
+  await page.route('**/api/comparisons/games', route => route.fulfill({ json: [game] }));
+  await page.route('**/api/steam/featured', route => route.fulfill({ json: {
+    resultados: [{ appId: game.steam.appId, nome: game.nome, imagem: null }],
+  } }));
+  await page.route('**/api/steam/games/*', route => route.fulfill({ json: {
+    ...steam, appId: game.steam.appId, nome: game.nome, tipo: 'game', regiao: 'BR',
+    situacaoPreco: 'informado', consultadoEm: '2026-11-24T12:00:00Z',
+  } }));
+  await page.route('**/api/epic/games?*', route => route.fulfill({ json: {
+    resultados: [{ ...epic, fonte: 'EGData', id: game.epic.offerId, namespace: game.epic.namespace, nome: game.nome, imagem: null }],
+    proximaPagina: null,
+  } }));
+  let saved = false;
+  await page.route('**/api/favorites', route => route.fulfill({ json: saved ? [game] : [] }));
+  await page.route('**/api/favorites/hades', route => {
+    saved = route.request().method() === 'PUT';
+    return route.fulfill({ status: 204 });
+  });
+
+  await page.goto('/#/busca');
+  await page.getByRole('button', { name: /Hades.*Ver oferta na Steam/ }).click();
+  const details = page.getByRole('dialog');
+  await details.getByRole('button', { name: 'Favoritar', exact: true }).click();
+  await expect(details.getByRole('button', { name: 'Remover dos favoritos' })).toHaveAttribute('aria-pressed', 'true');
+  await details.getByRole('button', { name: 'Voltar à busca' }).click();
+  const epicCatalog = page.getByRole('region', { name: 'Jogos da Epic' });
+  await expect(epicCatalog.getByRole('button', { name: 'Remover dos favoritos' })).toHaveAttribute('aria-pressed', 'true');
+
+  await page.goto('/#/favoritos');
+  await expect(page.getByRole('heading', { name: 'Hades' })).toBeVisible();
+  await page.goto('/#/busca');
+  await epicCatalog.getByRole('button', { name: 'Remover dos favoritos' }).click();
+  await expect(epicCatalog.getByRole('button', { name: 'Favoritar', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await page.goto('/#/favoritos');
+  await expect(page.getByText('Você ainda não tem jogos favoritos.')).toBeVisible();
+});
+
 test('lista mostra carregamento, erro e tentativa até o estado vazio', async ({ page }) => {
   await page.route('**/api/auth/me', route => route.fulfill({ json: { user: { id: 'a', name: 'Conta A' } } }));
   let release!: () => void;
