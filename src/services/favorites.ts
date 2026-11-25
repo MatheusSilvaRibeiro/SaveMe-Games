@@ -6,6 +6,7 @@ export interface FavoriteGame {
   edicao: string;
   plataforma: string;
   imagem?: string | null;
+  link?: string;
 }
 
 const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
@@ -16,7 +17,9 @@ async function request(signal: AbortSignal, game?: FavoriteGame, method?: 'PUT' 
   return fetch(`${base}/favorites${game ? '/' + encodeURIComponent(game.id) : ''}`, {
     credentials: 'include',
     signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
-    ...(method ? { method, headers: { 'Content-Type': 'application/json' }, body: '{}' } : {}),
+    ...(method ? { method, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(method === 'PUT' && game?.link ? { nome: game.nome, link: game.link } : {}),
+    } : {}),
   });
 }
 

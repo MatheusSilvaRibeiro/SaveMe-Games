@@ -20,6 +20,7 @@ test('entrada mostra seleção e identifica grátis sem abrir popup', async ({ p
   await page.goto('/#/busca');
   await expect(page.getByRole('heading', { name: 'Explore a Steam' })).toBeVisible();
   const free = page.getByRole('button', { name: /Dota 2.*Visualizar preço/ });
+  await expect(free.locator('..').getByRole('button', { name: 'Adicionar aos favoritos' })).toBeVisible();
   await expect(free).toContainText('Gratuito');
   await expect(free).not.toContainText('Preço sob consulta');
   await expect(page.getByRole('button', { name: /Preço desconhecido.*Visualizar preço/ })).toContainText('Preço sob consulta');

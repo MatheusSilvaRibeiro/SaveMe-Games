@@ -16,6 +16,7 @@ test('favoritos isolam duas contas e mantêm sessão e escritas idempotentes', {
   process.env.JWT_SECRET = crypto.randomUUID();
   const db = new DatabaseService();
   const emails = [`a-${crypto.randomUUID()}@example.invalid`, `b-${crypto.randomUUID()}@example.invalid`];
+  const standaloneId = `epic-test-${crypto.randomUUID().replaceAll('-', '')}`;
   const app = await createApp();
   try {
     await app.listen(0, '127.0.0.1');
@@ -60,6 +61,14 @@ test('favoritos isolam duas contas e mantêm sessão e escritas idempotentes', {
     assert.deepEqual(await (await list(a.cookie)).json(), []);
     assert.equal((await (await list(b.cookie)).json()).length, 1);
 
+    const standalone = { nome: 'Jogo de uma loja', link: 'https://store.epicgames.com/pt-BR/p/jogo-de-uma-loja' };
+    assert.equal((await write('PUT', a.cookie, standaloneId, origin, standalone)).status, 204);
+    assert.deepEqual((await (await list(a.cookie)).json()).map(({ id, link }: { id: string; link?: string }) => ({ id, link })),
+      [{ id: standaloneId, link: standalone.link }]);
+    assert.equal(await db.favorite.count({ where: { gameId: standaloneId, userId: b.id } }), 0);
+    assert.equal((await write('DELETE', a.cookie, standaloneId)).status, 204);
+    assert.deepEqual(await (await list(a.cookie)).json(), []);
+
     const legacyA = 'saveme_session=' + a.cookie.slice(currentCookieName.length);
     assert.equal((await list(legacyA)).status, 401);
     const me = (cookie: string) => fetch(`${base}/auth/me`, { headers: { Cookie: cookie } });
@@ -75,7 +84,10 @@ test('favoritos isolam duas contas e mantêm sessão e escritas idempotentes', {
     assert.equal((await list(a.cookie)).status, 401);
   } finally {
     await app.close();
-    try { await db.user.deleteMany({ where: { email: { in: emails } } }); }
+    try {
+      await db.user.deleteMany({ where: { email: { in: emails } } });
+      await db.game.deleteMany({ where: { id: standaloneId } });
+    }
     finally { await db.$disconnect(); }
   }
 });

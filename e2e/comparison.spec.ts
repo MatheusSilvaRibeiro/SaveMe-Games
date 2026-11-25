@@ -94,7 +94,7 @@ test('seleção e comparação de outro jogo funcionam a partir do card Epic', a
  await page.route('**/api/steam/featured', route => route.fulfill({ json: { resultados: [] } }));
  await page.route('**/api/epic/games?*', route => route.fulfill({ json: { resultados: [{ ...epicOffer, ...celeste.epic, id: celeste.epic.offerId, namespace: celeste.epic.namespace, nome: 'Celeste', imagem: null }], proximaPagina: null } }));
  await page.goto('/#/busca');
- await page.getByRole('region', { name: 'Jogos da Epic' }).getByRole('link', { name: 'Comparar preços nas lojas →' }).click();
+ await page.getByRole('region', { name: 'Jogos da Epic' }).getByRole('link', { name: 'Comparar preços', exact: true }).click();
  await expect(page).toHaveURL(/#\/comparacao\/celeste$/);
  await expect(page.getByRole('region', { name: 'Resultado da comparação' })).toContainText('Economize R$ 5,75');
  await expect(page.getByRole('list', { name: 'Ofertas das lojas' })).toContainText('−75%');

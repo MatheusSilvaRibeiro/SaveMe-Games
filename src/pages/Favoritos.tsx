@@ -8,7 +8,7 @@ export function Favoritos() {
 
   return <>
     <h1>Meus favoritos</h1>
-    <p>Acompanhamos os jogos salvos e mostramos quedas de preço em <a href="#/avisos">Avisos</a> quando uma consulta registra a mudança. A frequência depende das coletas.</p>
+    <p>Para jogos com comparação no catálogo, mostramos quedas de preço em <a href="#/avisos">Avisos</a> quando uma consulta registra a mudança.</p>
     {!sessionReady ? <p role="status">Verificando sua sessão…</p>
       : !user || favorites.sessionExpired ? <p>Entre na sua conta para ver seus favoritos. <a href="#/login">Ir para o login</a></p>
       : favorites.error ? <div>
@@ -24,7 +24,9 @@ export function Favoritos() {
             <h2 className="text-xl font-semibold">{game.nome}</h2>
             <p className="mt-2 text-sm">{game.edicao} · {game.plataforma}</p>
             <div className="flex flex-wrap items-center gap-4">
-              <a href={`#/comparacao/${game.id}`}>Comparar preços</a>
+              {game.link
+                ? <a href={game.link} target="_blank" rel="noopener noreferrer">Visualizar preço</a>
+                : <a href={`#/comparacao/${game.id}`}>Comparar preços</a>}
               <button type="button" disabled={Boolean(favorites.pending)} aria-label={`Remover ${game.nome} dos favoritos`}
                 onClick={() => void favorites.change(game, false)} className="rounded-lg border border-slate-300 px-3 py-2">
                 {favorites.pending === game.id ? 'Removendo…' : 'Remover'}

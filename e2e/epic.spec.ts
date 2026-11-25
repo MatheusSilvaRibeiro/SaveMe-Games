@@ -14,6 +14,8 @@ test('busca mostra ambas as lojas e direciona a oferta Epic sem entrar na compar
   const epic = page.getByRole('region', { name: 'Jogos da Epic' });
   await expect(epic).toContainText('Celeste');
   await expect(epic.getByRole('link', { name: 'Visualizar preço' })).toHaveAttribute('href', offer.link);
+  await expect(epic.getByRole('link', { name: 'Comparar preços', exact: true })).toHaveCount(0);
+  await expect(epic.getByRole('button', { name: 'Adicionar aos favoritos' })).toBeVisible();
   await expect(epic.getByRole('link')).toHaveCount(1);
   await page.getByLabel('Qual jogo você está procurando?').fill('Celeste');
   await page.getByRole('button', { name: 'Buscar', exact: true }).click();

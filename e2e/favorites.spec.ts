@@ -41,11 +41,11 @@ test('busca compartilha o favorito entre Steam, Epic e a lista da conta', async 
   });
 
   await page.goto('/#/busca');
-  await page.getByRole('button', { name: /Hades.*Ver oferta na Steam/ }).click();
-  const details = page.getByRole('dialog');
-  await details.getByRole('button', { name: 'Favoritar', exact: true }).click();
-  await expect(details.getByRole('button', { name: 'Remover dos favoritos' })).toHaveAttribute('aria-pressed', 'true');
-  await details.getByRole('button', { name: 'Voltar à busca' }).click();
+  const steamCatalog = page.getByRole('region', { name: 'Resultados da busca' });
+  await expect(steamCatalog.getByRole('link', { name: 'Comparar preços', exact: true })).toHaveAttribute('href', '#/comparacao/hades');
+  await steamCatalog.getByRole('button', { name: 'Adicionar aos favoritos' }).click();
+  await expect(steamCatalog.getByRole('button', { name: 'Remover dos favoritos' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('dialog')).toBeHidden();
   const epicCatalog = page.getByRole('region', { name: 'Jogos da Epic' });
   await expect(epicCatalog.getByRole('button', { name: 'Remover dos favoritos' })).toHaveAttribute('aria-pressed', 'true');
 
@@ -53,7 +53,7 @@ test('busca compartilha o favorito entre Steam, Epic e a lista da conta', async 
   await expect(page.getByRole('heading', { name: 'Hades' })).toBeVisible();
   await page.goto('/#/busca');
   await epicCatalog.getByRole('button', { name: 'Remover dos favoritos' }).click();
-  await expect(epicCatalog.getByRole('button', { name: 'Favoritar', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await expect(epicCatalog.getByRole('button', { name: 'Adicionar aos favoritos' })).toHaveAttribute('aria-pressed', 'false');
   await page.goto('/#/favoritos');
   await expect(page.getByText('Você ainda não tem jogos favoritos.')).toBeVisible();
 });

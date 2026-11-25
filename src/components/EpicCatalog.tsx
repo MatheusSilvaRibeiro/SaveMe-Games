@@ -3,16 +3,9 @@ import { useEffect, useState } from 'react';
 import { searchEpic, type EpicOffer } from '../services/epic';
 import type { useFavorites } from '../services/favorites';
 import { FavoriteToggle } from './FavoriteButton';
+import { SearchGameArtwork, cardActionStyle, cardBodyStyle, cardPriceStyle, cardStoreStyle, cardStyle, cardTitleStyle } from './SearchGameCard';
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 interface Props { comparableGames?: ComparableGame[]; favorites: ReturnType<typeof useFavorites>; term: string; genre: string; priceFilter: string; onGenres: (genres: string[]) => void; }
-function EpicArtwork({ src }: { src: string | null }) {
-  const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
-  return <div className="relative flex aspect-[231/87] w-full items-center justify-center overflow-hidden bg-violet-50">
-    {!loaded && <span aria-hidden="true" className="font-display text-xl font-semibold text-brand-purple">SaveMe Games</span>}
-    {src && !failed && <img src={src} alt="" loading="lazy" onLoad={() => setLoaded(true)} onError={() => setFailed(true)} className={`absolute inset-0 h-full w-full object-cover ${loaded ? 'opacity-100' : 'opacity-0'}`} />}
-  </div>;
-}
 export function EpicCatalog(props: Props) {
   // Remounting the inner list on term change resets pagination atomically.
   return <EpicList key={props.term} {...props} />;
@@ -48,27 +41,30 @@ function EpicList({ term, genre, priceFilter, onGenres, comparableGames = [], fa
     {!busy && !error && items.length > 0 && !visible.length && <p>Nenhum título da Epic corresponde aos filtros.</p>}
     {items.length > 0 && <p aria-live="polite" className="!mb-5 text-sm !leading-5">{visible.length} {visible.length === 1 ? 'título exibido' : 'títulos exibidos'}.</p>}
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{visible.map(item => {
-      const matches = comparableGames.filter(game => game.epic.offerId === item.id && game.epic.namespace === item.namespace);
-      return <li key={`${item.namespace}:${item.id}`} className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <EpicArtwork key={item.imagem} src={item.imagem} />
-      <div className="flex flex-1 flex-col p-5">
-        <p className="!mb-2 text-xs font-semibold uppercase">Epic Games Store · Brasil</p>
-        <h3 className="text-lg font-semibold">{item.nome}</h3>
-        <p className="mt-3 !mb-3 text-sm !leading-5">{item.sistemas?.length ? item.sistemas.join(' · ') : 'Sistemas não informados'}</p>
+      const comparable = comparableGames.find(game => game.epic.offerId === item.id && game.epic.namespace === item.namespace);
+      const link = item.link ?? `https://store.epicgames.com/pt-BR/browse?q=${encodeURIComponent(item.nome)}&sortBy=relevancy&sortDir=DESC&count=40`;
+      const favorite = comparable ?? { id: `epic-${item.namespace.toLowerCase()}-${item.id.toLowerCase()}`, nome: item.nome, edicao: 'Epic Games Store', plataforma: 'PC', link };
+      return <li key={`${item.namespace}:${item.id}`} className={cardStyle}>
+      <SearchGameArtwork key={item.imagem} src={item.imagem} />
+      <div className={cardBodyStyle}>
+        <span className={cardStoreStyle}>Epic Games Store · Brasil</span>
+        <h3 className={cardTitleStyle}>{item.nome}</h3>
+        <span className="mt-3 block text-sm text-slate-600">{item.sistemas?.length ? item.sistemas.join(' · ') : 'Sistemas não informados'}</span>
         {!!item.generos?.length && <div className="mb-4 flex flex-wrap gap-2">{item.generos.slice(0, 2).map(value => <span key={value} className="rounded-md bg-violet-50 px-2 py-1 text-xs font-medium text-brand-purple">{value}</span>)}</div>}
-        <div className="mt-auto border-t border-slate-100 pt-4">
-          {item.precoOriginalCentavos != null && <p className="!mb-1 text-sm line-through">{money.format(item.precoOriginalCentavos / 100)}</p>}
-          <p className="!mb-3 text-xl font-bold">{item.emBreve ? 'Em breve' : item.precoCentavos === null ? 'Preço não informado para o Brasil' : item.precoCentavos === 0 ? 'Grátis nesta oferta' : money.format(item.precoCentavos / 100)}</p>
-          {item.descontoPercentual != null && item.descontoPercentual > 0 && <span className="mb-3 inline-block rounded-md bg-green-100 px-2 py-1 text-sm font-semibold text-green-900">−{item.descontoPercentual}%</span>}
-          <a href={item.link ?? `https://store.epicgames.com/pt-BR/browse?q=${encodeURIComponent(item.nome)}&sortBy=relevancy&sortDir=DESC&count=40`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center rounded-lg bg-brand-purple px-4 py-3 text-sm font-semibold !text-white">{!matches.length ? 'Visualizar preço' : !item.link ? 'Pesquisar na Epic' : item.emBreve || item.precoCentavos === null ? 'Ver página na Epic' : 'Ver oferta na Epic'} <span aria-hidden="true" className="ml-1">↗</span></a>
-          {matches.map(game => (
-            <div key={game.id}>
-              <a href={`#/comparacao/${game.id}`} className="mt-3 block text-center text-sm font-semibold text-brand-purple">Comparar preços nas lojas →</a>
-              <FavoriteToggle game={game} favorites={favorites} />
-            </div>
-          ))}
-          {!item.link && <p className="mt-2 !mb-0 text-xs">Página exata não informada pela fonte. O botão busca este nome na loja.</p>}
+        <div className={cardPriceStyle}>
+          <div>
+            {item.precoOriginalCentavos != null && <span className="block text-sm text-slate-500 line-through">{money.format(item.precoOriginalCentavos / 100)}</span>}
+            <span className="block text-xl font-bold text-night">{item.emBreve ? 'Em breve' : item.precoCentavos === null ? 'Preço não informado para o Brasil' : item.precoCentavos === 0 ? 'Grátis nesta oferta' : money.format(item.precoCentavos / 100)}</span>
+          </div>
+          {item.descontoPercentual != null && item.descontoPercentual > 0 && <span className="rounded-md bg-green-100 px-2 py-1 text-sm font-semibold text-green-900">−{item.descontoPercentual}%</span>}
         </div>
+      </div>
+      <div className="grid gap-2 px-5 pb-5">
+        {comparable
+          ? <a href={`#/comparacao/${comparable.id}`} className={cardActionStyle}>Comparar preços</a>
+          : <a href={link} target="_blank" rel="noopener noreferrer" className={cardActionStyle}>Visualizar preço</a>}
+        <FavoriteToggle card game={favorite} favorites={favorites} />
+        {!item.link && !comparable && <p className="!mb-0 text-xs">Página exata não informada pela fonte. O botão busca este nome na loja.</p>}
       </div>
     </li>;
     })}</ul>
