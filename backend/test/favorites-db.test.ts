@@ -63,8 +63,12 @@ test('favoritos isolam duas contas e mantêm sessão e escritas idempotentes', {
 
     const standalone = { nome: 'Jogo de uma loja', link: 'https://store.epicgames.com/pt-BR/p/jogo-de-uma-loja' };
     assert.equal((await write('PUT', a.cookie, standaloneId, origin, standalone)).status, 204);
-    assert.deepEqual((await (await list(a.cookie)).json()).map(({ id, link }: { id: string; link?: string }) => ({ id, link })),
-      [{ id: standaloneId, link: standalone.link }]);
+    const imagem = 'https://cdn.example.com/jogo.jpg';
+    assert.equal((await write('PUT', a.cookie, standaloneId, origin, { ...standalone, imagem })).status, 204);
+    const [saved] = await (await list(a.cookie)).json();
+    assert.equal(saved.id, standaloneId);
+    assert.equal(saved.link, standalone.link);
+    assert.equal(saved.imagem, imagem);
     assert.equal(await db.favorite.count({ where: { gameId: standaloneId, userId: b.id } }), 0);
     assert.equal((await write('DELETE', a.cookie, standaloneId)).status, 204);
     assert.deepEqual(await (await list(a.cookie)).json(), []);

@@ -207,7 +207,7 @@ export function Busca() {
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {visibleResults.map(game => {
               const comparable = comparableGames.find(item => item.steam.appId === game.appId);
-              const favorite = comparable ?? { id: `steam-${game.appId}`, nome: game.nome, edicao: 'Steam', plataforma: 'PC', link: `https://store.steampowered.com/app/${game.appId}/` };
+              const favorite = comparable ?? { id: `steam-${game.appId}`, nome: game.nome, edicao: 'Steam', plataforma: 'PC', imagem: game.imagem, link: `https://store.steampowered.com/app/${game.appId}/` };
               return <li key={game.appId} className={cardStyle}>
               <SearchGameArtwork key={game.imagem} src={game.imagem} />
               <button type="button" onClick={() => openGame(game)} className={`${cardBodyStyle} hover:bg-violet-50/40`}>

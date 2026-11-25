@@ -18,7 +18,7 @@ async function request(signal: AbortSignal, game?: FavoriteGame, method?: 'PUT' 
     credentials: 'include',
     signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
     ...(method ? { method, headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(method === 'PUT' && game?.link ? { nome: game.nome, link: game.link } : {}),
+      body: JSON.stringify(method === 'PUT' && game?.link ? { nome: game.nome, link: game.link, imagem: game.imagem } : {}),
     } : {}),
   });
 }

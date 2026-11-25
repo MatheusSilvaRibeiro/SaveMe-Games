@@ -43,7 +43,7 @@ function EpicList({ term, genre, priceFilter, onGenres, comparableGames = [], fa
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{visible.map(item => {
       const comparable = comparableGames.find(game => game.epic.offerId === item.id && game.epic.namespace === item.namespace);
       const link = item.link ?? `https://store.epicgames.com/pt-BR/browse?q=${encodeURIComponent(item.nome)}&sortBy=relevancy&sortDir=DESC&count=40`;
-      const favorite = comparable ?? { id: `epic-${item.namespace.toLowerCase()}-${item.id.toLowerCase()}`, nome: item.nome, edicao: 'Epic Games Store', plataforma: 'PC', link };
+      const favorite = comparable ?? { id: `epic-${item.namespace.toLowerCase()}-${item.id.toLowerCase()}`, nome: item.nome, edicao: 'Epic Games Store', plataforma: 'PC', imagem: item.imagem, link };
       return <li key={`${item.namespace}:${item.id}`} className={cardStyle}>
       <SearchGameArtwork key={item.imagem} src={item.imagem} />
       <div className={cardBodyStyle}>

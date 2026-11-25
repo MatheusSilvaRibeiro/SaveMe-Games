@@ -7,6 +7,16 @@ import { DatabaseService } from './database.js';
 const catalogId = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const epicFavoriteId = /^epic-[a-z0-9]+(?:[-_][a-z0-9]+)+$/;
 
+function coverUrl(value: unknown) {
+  if (typeof value !== 'string' || value.length > 2048) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 function storeGame(gameId: string, body: unknown) {
   const steam = /^steam-([1-9][0-9]{0,9})$/.exec(gameId);
   const epic = epicFavoriteId.test(gameId);
@@ -17,7 +27,8 @@ function storeGame(gameId: string, body: unknown) {
   const storeUrl = steam ? `https://store.steampowered.com/app/${steam[1]}/`
     : /^https:\/\/store\.epicgames\.com\/pt-BR\/p\/[a-z0-9-]{1,150}$/i.test(link) ? link
     : `https://store.epicgames.com/pt-BR/browse?q=${encodeURIComponent(name)}&sortBy=relevancy&sortDir=DESC&count=40`;
-  return { id: gameId, name, edition: steam ? 'Steam' : 'Epic Games Store', platform: 'PC', storeUrl };
+  const imageUrl = 'imagem' in body ? coverUrl(body.imagem) : null;
+  return { id: gameId, name, edition: steam ? 'Steam' : 'Epic Games Store', platform: 'PC', storeUrl, imageUrl };
 }
 
 @Controller('favorites')
@@ -59,6 +70,12 @@ export class FavoritesController {
     if (standalone) {
       await this.db.$transaction(async tx => {
         await tx.game.createMany({ data: standalone, skipDuplicates: true });
+        if (standalone.imageUrl) {
+          await tx.game.updateMany({
+            where: { id: gameId, storeUrl: { not: null }, imageUrl: null },
+            data: { imageUrl: standalone.imageUrl },
+          });
+        }
         await tx.favorite.createMany({ data: { userId, gameId }, skipDuplicates: true });
       });
       return;

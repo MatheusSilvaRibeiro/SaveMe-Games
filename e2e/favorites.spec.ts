@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const game = { id: 'hades', nome: 'Hades', edicao: 'Jogo base', plataforma: 'PC', steam: { appId: 1145360 }, epic: { offerId: 'hades-offer', namespace: 'min' } };
+const game = { id: 'hades', nome: 'Hades', edicao: 'Jogo base', plataforma: 'PC', imagem: 'https://images.example/hades.jpg', steam: { appId: 1145360 }, epic: { offerId: 'hades-offer', namespace: 'min' } };
 const steam = { loja: 'Steam', situacao: 'disponivel', precoCentavos: 5000, moeda: 'BRL', link: 'https://store.steampowered.com/app/1145360/' };
 const epic = { ...steam, loja: 'Epic Games Store', link: 'https://store.epicgames.com/pt-BR/p/hades' };
 
@@ -44,15 +44,16 @@ test('busca compartilha o favorito entre Steam, Epic e a lista da conta', async 
   const steamCatalog = page.getByRole('region', { name: 'Resultados da busca' });
   await expect(steamCatalog.getByRole('link', { name: 'Comparar preços', exact: true })).toHaveAttribute('href', '#/comparacao/hades');
   await steamCatalog.getByRole('button', { name: 'Adicionar aos favoritos' }).click();
-  await expect(steamCatalog.getByRole('button', { name: 'Remover dos favoritos' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(steamCatalog.getByRole('button', { name: 'Adicionado aos favoritos' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('dialog')).toBeHidden();
   const epicCatalog = page.getByRole('region', { name: 'Jogos da Epic' });
-  await expect(epicCatalog.getByRole('button', { name: 'Remover dos favoritos' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(epicCatalog.getByRole('button', { name: 'Adicionado aos favoritos' })).toHaveAttribute('aria-pressed', 'true');
 
   await page.goto('/#/favoritos');
   await expect(page.getByRole('heading', { name: 'Hades' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Jogos favoritos' }).locator('img')).toHaveAttribute('src', game.imagem);
   await page.goto('/#/busca');
-  await epicCatalog.getByRole('button', { name: 'Remover dos favoritos' }).click();
+  await epicCatalog.getByRole('button', { name: 'Adicionado aos favoritos' }).click();
   await expect(epicCatalog.getByRole('button', { name: 'Adicionar aos favoritos' })).toHaveAttribute('aria-pressed', 'false');
   await page.goto('/#/favoritos');
   await expect(page.getByText('Você ainda não tem jogos favoritos.')).toBeVisible();
@@ -91,7 +92,7 @@ test('sessão antiga migra no navegador e favoritos persistem até a remoção @
   await page.goto('/#/comparacao/hades');
   const add = page.getByRole('button', { name: 'Favoritar', exact: true });
   await add.click();
-  await expect(page.getByRole('button', { name: 'Remover dos favoritos' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Adicionado aos favoritos' })).toBeVisible();
   expect((await context.cookies()).map(cookie => cookie.name)).toEqual(['saveme_session_api']);
   await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('link', { name: 'Favoritos' }).click();
   await expect(page.getByRole('list', { name: 'Jogos favoritos' })).toContainText('Hades');

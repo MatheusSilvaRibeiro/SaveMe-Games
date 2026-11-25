@@ -1,5 +1,6 @@
 import { useSessionReady, useUser } from '../services/auth';
 import { useFavorites } from '../services/favorites';
+import { SearchGameArtwork } from '../components/SearchGameCard';
 
 export function Favoritos() {
   const user = useUser();
@@ -19,7 +20,7 @@ export function Favoritos() {
       : favorites.games.length === 0 ? <p>Você ainda não tem jogos favoritos. <a href="#/comparacao">Ver jogos para comparar</a></p>
       : <ul aria-label="Jogos favoritos" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {favorites.games.map(game => <li key={game.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          {game.imagem && <img src={game.imagem} alt="" loading="lazy" className="aspect-[231/87] w-full object-cover" />}
+          <SearchGameArtwork key={game.imagem} src={game.imagem} />
           <div className="p-5">
             <h2 className="text-xl font-semibold">{game.nome}</h2>
             <p className="mt-2 text-sm">{game.edicao} · {game.plataforma}</p>
