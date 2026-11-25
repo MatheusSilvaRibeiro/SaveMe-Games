@@ -4,9 +4,12 @@ import type { Request } from 'express';
 import { AuthService, checkWriteOrigin } from './auth.js';
 import { DatabaseService } from './database.js';
 
+const catalogId = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const epicFavoriteId = /^epic-[a-z0-9]+(?:[-_][a-z0-9]+)+$/;
+
 function storeGame(gameId: string, body: unknown) {
   const steam = /^steam-([1-9][0-9]{0,9})$/.exec(gameId);
-  const epic = /^epic-[a-z0-9]{1,40}-[a-z0-9]{1,40}$/.test(gameId);
+  const epic = epicFavoriteId.test(gameId);
   if ((!steam && !epic) || !body || typeof body !== 'object' || !('nome' in body)) return null;
   const name = typeof body.nome === 'string' ? body.nome.trim() : '';
   if (!name || name.length > 200 || name.includes('\0')) throw new BadRequestException('Nome de jogo inválido.');
@@ -42,7 +45,7 @@ export class FavoritesController {
   private async checkWrite(req: Request, gameId: string) {
     const user = await this.auth.requireUser(req);
     checkWriteOrigin(req);
-    if (gameId.length > 100 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(gameId)) {
+    if (gameId.length > 100 || (!catalogId.test(gameId) && !epicFavoriteId.test(gameId))) {
       throw new BadRequestException('Identificador de jogo inválido.');
     }
     return user.id;

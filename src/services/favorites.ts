@@ -68,6 +68,12 @@ export function useFavorites(userId: string | undefined) {
         setMutation({ owner: userId, sessionExpired: true });
         return;
       }
+      if (response.status === 400 || response.status === 404) {
+        setMutation({ owner: userId, error: favorite
+          ? 'Não foi possível salvar este jogo. Atualize a busca e tente novamente.'
+          : 'Não foi possível remover este jogo. Atualize a lista e tente novamente.' });
+        return;
+      }
       if (!response.ok) throw new Error();
       setSnapshot(previous => previous?.owner === userId && previous.games
         ? { ...previous, games: favorite ? [game, ...previous.games.filter(item => item.id !== game.id)]

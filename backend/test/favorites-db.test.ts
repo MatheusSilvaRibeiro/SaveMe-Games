@@ -16,7 +16,7 @@ test('favoritos isolam duas contas e mantêm sessão e escritas idempotentes', {
   process.env.JWT_SECRET = crypto.randomUUID();
   const db = new DatabaseService();
   const emails = [`a-${crypto.randomUUID()}@example.invalid`, `b-${crypto.randomUUID()}@example.invalid`];
-  const standaloneId = `epic-test-${crypto.randomUUID().replaceAll('-', '')}`;
+  const standaloneId = `epic-p-test_namespace-${crypto.randomUUID()}`;
   const app = await createApp();
   try {
     await app.listen(0, '127.0.0.1');
