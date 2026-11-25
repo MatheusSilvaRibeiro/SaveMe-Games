@@ -47,7 +47,9 @@ function EpicList({ term, genre, priceFilter, onGenres, comparableGames = [], fa
     {!busy && !error && !items.length && <p>{next ? 'Nenhuma oferta disponível nesta página. Carregue mais jogos para continuar.' : term ? 'Nenhum jogo encontrado na Epic para esta pesquisa.' : 'Nenhuma oferta disponível na Epic neste momento.'}</p>}
     {!busy && !error && items.length > 0 && !visible.length && <p>Nenhum título da Epic corresponde aos filtros.</p>}
     {items.length > 0 && <p aria-live="polite" className="!mb-5 text-sm !leading-5">{visible.length} {visible.length === 1 ? 'título exibido' : 'títulos exibidos'}.</p>}
-    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{visible.map(item => <li key={`${item.namespace}:${item.id}`} className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{visible.map(item => {
+      const matches = comparableGames.filter(game => game.epic.offerId === item.id && game.epic.namespace === item.namespace);
+      return <li key={`${item.namespace}:${item.id}`} className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
       <EpicArtwork key={item.imagem} src={item.imagem} />
       <div className="flex flex-1 flex-col p-5">
         <p className="!mb-2 text-xs font-semibold uppercase">Epic Games Store · Brasil</p>
@@ -58,8 +60,8 @@ function EpicList({ term, genre, priceFilter, onGenres, comparableGames = [], fa
           {item.precoOriginalCentavos != null && <p className="!mb-1 text-sm line-through">{money.format(item.precoOriginalCentavos / 100)}</p>}
           <p className="!mb-3 text-xl font-bold">{item.emBreve ? 'Em breve' : item.precoCentavos === null ? 'Preço não informado para o Brasil' : item.precoCentavos === 0 ? 'Grátis nesta oferta' : money.format(item.precoCentavos / 100)}</p>
           {item.descontoPercentual != null && item.descontoPercentual > 0 && <span className="mb-3 inline-block rounded-md bg-green-100 px-2 py-1 text-sm font-semibold text-green-900">−{item.descontoPercentual}%</span>}
-          <a href={item.link ?? `https://store.epicgames.com/pt-BR/browse?q=${encodeURIComponent(item.nome)}&sortBy=relevancy&sortDir=DESC&count=40`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center rounded-lg bg-brand-purple px-4 py-3 text-sm font-semibold !text-white">{!item.link ? 'Pesquisar na Epic ↗' : item.emBreve || item.precoCentavos === null ? 'Ver página na Epic ↗' : 'Ver oferta na Epic ↗'}</a>
-          {comparableGames.filter(game => game.epic.offerId === item.id && game.epic.namespace === item.namespace).map(game => (
+          <a href={item.link ?? `https://store.epicgames.com/pt-BR/browse?q=${encodeURIComponent(item.nome)}&sortBy=relevancy&sortDir=DESC&count=40`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center rounded-lg bg-brand-purple px-4 py-3 text-sm font-semibold !text-white">{!matches.length ? 'Visualizar preço' : !item.link ? 'Pesquisar na Epic' : item.emBreve || item.precoCentavos === null ? 'Ver página na Epic' : 'Ver oferta na Epic'} <span aria-hidden="true" className="ml-1">↗</span></a>
+          {matches.map(game => (
             <div key={game.id}>
               <a href={`#/comparacao/${game.id}`} className="mt-3 block text-center text-sm font-semibold text-brand-purple">Comparar preços nas lojas →</a>
               <FavoriteToggle game={game} favorites={favorites} />
@@ -68,7 +70,8 @@ function EpicList({ term, genre, priceFilter, onGenres, comparableGames = [], fa
           {!item.link && <p className="mt-2 !mb-0 text-xs">Página exata não informada pela fonte. O botão busca este nome na loja.</p>}
         </div>
       </div>
-    </li>)}</ul>
+    </li>;
+    })}</ul>
     {next && <button type="button" disabled={busy} onClick={() => setPage(next)} className="mt-6 rounded-xl border border-brand-purple px-5 py-3">Carregar mais jogos da Epic</button>}
   </section>;
 }

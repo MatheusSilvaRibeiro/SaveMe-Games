@@ -217,7 +217,9 @@ export function Busca() {
                     </span>
                     {game.descontoPercentual != null && game.descontoPercentual > 0 && <span className="rounded-md bg-green-100 px-2 py-1 text-sm font-semibold text-green-900">−{game.descontoPercentual}%</span>}
                   </span>
-                  <span className="mt-4 block text-sm font-semibold text-brand-purple">Ver oferta na Steam →</span>
+                  <span className="mt-4 block text-sm font-semibold text-brand-purple">
+                    {comparableGames.some(item => item.steam.appId === game.appId) ? 'Ver oferta na Steam' : 'Visualizar preço'} <span aria-hidden="true">→</span>
+                  </span>
                 </span>
               </button>
             </li>)}

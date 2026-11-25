@@ -13,7 +13,7 @@ test('busca mostra ambas as lojas e direciona a oferta Epic sem entrar na compar
   await page.goto('/#/busca');
   const epic = page.getByRole('region', { name: 'Jogos da Epic' });
   await expect(epic).toContainText('Celeste');
-  await expect(epic.getByRole('link', { name: 'Ver oferta na Epic ↗' })).toHaveAttribute('href', offer.link);
+  await expect(epic.getByRole('link', { name: 'Visualizar preço' })).toHaveAttribute('href', offer.link);
   await expect(epic.getByRole('link')).toHaveCount(1);
   await page.getByLabel('Qual jogo você está procurando?').fill('Celeste');
   await page.getByRole('button', { name: 'Buscar', exact: true }).click();
@@ -71,8 +71,8 @@ test('jogo futuro não mostra valor como oferta de compra', async ({ page }) => 
   await page.goto('/#/busca');
   const epic = page.getByRole('region', { name: 'Jogos da Epic' });
   await expect(epic).toContainText('Em breve');
-  await expect(epic.getByRole('link', { name: 'Ver página na Epic ↗' })).toHaveAttribute('href', offer.link);
-  await expect(epic.getByRole('link', { name: 'Ver oferta na Epic ↗' })).toHaveCount(0);
+  await expect(epic.getByRole('link', { name: 'Visualizar preço' })).toHaveAttribute('href', offer.link);
+  await expect(epic.getByRole('link', { name: 'Ver oferta na Epic' })).toHaveCount(0);
 });
 
 test('oferta sem página canônica oferece pesquisa explícita na loja', async ({ page }) => {
@@ -80,6 +80,6 @@ test('oferta sem página canônica oferece pesquisa explícita na loja', async (
   await page.goto('/#/busca');
   const epic = page.getByRole('region', { name: 'Jogos da Epic' });
   await expect(epic).toContainText('Preço não informado para o Brasil');
-  await expect(epic.getByRole('link', { name: 'Pesquisar na Epic ↗' })).toHaveAttribute('href', 'https://store.epicgames.com/pt-BR/browse?q=Celeste&sortBy=relevancy&sortDir=DESC&count=40');
+  await expect(epic.getByRole('link', { name: 'Visualizar preço' })).toHaveAttribute('href', 'https://store.epicgames.com/pt-BR/browse?q=Celeste&sortBy=relevancy&sortDir=DESC&count=40');
   await expect(epic).toContainText('Página exata não informada');
 });
