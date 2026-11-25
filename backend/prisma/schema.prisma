@@ -47,6 +47,7 @@ model Game {
   edition      String       @db.VarChar(100)
   platform     String       @db.VarChar(30)
   imageUrl     String?
+  storeUrl     String?
   catalogOrder Int          @default(0)
   offers       StoreOffer[]
   favorites    Favorite[]

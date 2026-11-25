@@ -6,6 +6,7 @@ export interface FavoriteGame {
   edicao: string;
   plataforma: string;
   imagem?: string | null;
+  link?: string;
 }
 
 const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
@@ -16,7 +17,9 @@ async function request(signal: AbortSignal, game?: FavoriteGame, method?: 'PUT' 
   return fetch(`${base}/favorites${game ? '/' + encodeURIComponent(game.id) : ''}`, {
     credentials: 'include',
     signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
-    ...(method ? { method, headers: { 'Content-Type': 'application/json' }, body: '{}' } : {}),
+    ...(method ? { method, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(method === 'PUT' && game?.link ? { nome: game.nome, link: game.link, imagem: game.imagem } : {}),
+    } : {}),
   });
 }
 
@@ -63,6 +66,12 @@ export function useFavorites(userId: string | undefined) {
       if (lifetime.aborted) return;
       if (response.status === 401) {
         setMutation({ owner: userId, sessionExpired: true });
+        return;
+      }
+      if (response.status === 400 || response.status === 404) {
+        setMutation({ owner: userId, error: favorite
+          ? 'Não foi possível salvar este jogo. Atualize a busca e tente novamente.'
+          : 'Não foi possível remover este jogo. Atualize a lista e tente novamente.' });
         return;
       }
       if (!response.ok) throw new Error();

@@ -136,7 +136,7 @@ test('cards e popup mostram preço, especificações e nota com fonte', async ({
   await page.goto('/#/busca');
   await page.getByLabel('Qual jogo você está procurando?').fill('Portal 2');
   await page.getByRole('button', { name: 'Buscar', exact: true }).click();
-  const card = page.getByRole('button', { name: /Portal 2.*Ver oferta na Steam/ });
+  const card = page.getByRole('button', { name: /Portal 2.*Visualizar preço/ });
   await expect(card).toContainText('Metacritic 95/100');
   await expect(card).toContainText('Windows · Linux');
   await expect(card).toContainText('R$ 33,99');

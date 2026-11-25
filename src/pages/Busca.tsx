@@ -1,5 +1,9 @@
 import { getComparableGames, titleKey, type ComparableGame } from '../services/comparison';
 import { EpicCatalog } from '../components/EpicCatalog';
+import { FavoriteToggle } from '../components/FavoriteButton';
+import { SearchGameArtwork, cardActionStyle, cardBodyStyle, cardPriceStyle, cardStoreStyle, cardStyle, cardTitleStyle } from '../components/SearchGameCard';
+import { useUser } from '../services/auth';
+import { useFavorites } from '../services/favorites';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { getGame, getFeatured, searchGames, type GameDetails, type SearchItem } from '../services/steam';
 
@@ -22,6 +26,8 @@ function contentInfo(type: string | null) {
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export function Busca() {
+  const user = useUser();
+  const favorites = useFavorites(user?.id);
   const [initialQuery] = useState(() => {
     const [, params] = window.location.hash.split('?');
     return new URLSearchParams(params).get('q')?.trim() ?? '';
@@ -176,6 +182,11 @@ export function Busca() {
             {(genre !== 'all' || priceFilter !== 'all') && <button type="button" onClick={() => { setGenre('all'); setPriceFilter('all'); }} className="rounded-lg px-3 py-2 text-sm font-semibold text-brand-purple hover:bg-violet-50">Limpar filtros</button>}
             <p className="basis-full !mb-0 text-xs">Filtrar os jogos carregados nas duas lojas</p>
           </div>
+      {favorites.error && <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4">
+        <p role="alert" className="!mb-2 !text-red-800">{favorites.error}</p>
+        <button type="button" onClick={favorites.reload} className="text-sm font-semibold text-brand-purple">Recarregar favoritos</button>
+      </div>}
+      {favorites.actionError && <p role="alert" className="!text-red-800">{favorites.actionError}</p>}
       <div id="steam-catalog" className="scroll-mt-8">
       <div className="mt-8 flex flex-wrap items-end justify-between gap-5">
         <div><h2 className="font-display text-2xl font-semibold">{searchedTerm ? 'Resultados na Steam' : 'Explore a Steam'}</h2>
@@ -194,35 +205,43 @@ export function Busca() {
           <p aria-live="polite" className="text-sm">{visibleResults.length} {visibleResults.length === 1 ? 'título exibido' : 'títulos exibidos'}.</p>
           {!visibleResults.length && <div className="rounded-xl border border-slate-200 bg-white p-6"><p className="!mb-0">Nenhum título corresponde aos filtros. Altere ou limpe os filtros para ver outras opções.</p></div>}
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleResults.map(game => <li key={game.appId}>
-              <button type="button" onClick={() => openGame(game)} className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition-colors hover:border-brand-purple hover:bg-violet-50">
-                {game.imagem && <img src={game.imagem} alt="" loading="lazy" className="aspect-[231/87] w-full object-cover" />}
-                <span className="flex flex-1 flex-col p-5">
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Steam · Brasil</span>
-                  <span className="mt-2 block font-display text-lg font-semibold leading-snug">{game.nome}</span>
+            {visibleResults.map(game => {
+              const comparable = comparableGames.find(item => item.steam.appId === game.appId);
+              const favorite = comparable ?? { id: `steam-${game.appId}`, nome: game.nome, edicao: 'Steam', plataforma: 'PC', imagem: game.imagem, link: `https://store.steampowered.com/app/${game.appId}/` };
+              return <li key={game.appId} className={cardStyle}>
+              <SearchGameArtwork key={game.imagem} src={game.imagem} />
+              <button type="button" onClick={() => openGame(game)} className={`${cardBodyStyle} hover:bg-violet-50/40`}>
+                  <span className={cardStoreStyle}>Steam · Brasil</span>
+                  <span className={cardTitleStyle}>{game.nome}</span>
                   <span className="mt-3 block text-sm text-slate-600">{game.sistemas?.length ? game.sistemas.join(' · ') : 'Sistemas não informados'}</span>
                   {!!game.generos?.length && <span className="mt-3 flex flex-wrap gap-2">{game.generos.slice(0, 2).map(value => <span key={value} className="rounded-md bg-violet-50 px-2 py-1 text-xs font-medium text-brand-purple">{value}</span>)}</span>}
                   <span className="mt-4 block text-sm text-slate-600">
                     {game.metacritic != null ? <>Metacritic <strong className="text-night">{game.metacritic}/100</strong></> : 'Sem nota Metacritic disponível'}
                   </span>
-                  <span className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-4">
+                  <span className={cardPriceStyle}>
                     <span>
                       {game.precoOriginalCentavos != null && <span className="block text-sm text-slate-500 line-through">{money.format(game.precoOriginalCentavos / 100)}</span>}
                       <span className="block text-xl font-bold text-night">{game.situacaoPreco === 'gratuito' ? 'Gratuito' : game.precoCentavos === 0 ? 'Grátis nesta oferta' : game.precoCentavos == null ? 'Preço sob consulta' : money.format(game.precoCentavos / 100)}</span>
                     </span>
                     {game.descontoPercentual != null && game.descontoPercentual > 0 && <span className="rounded-md bg-green-100 px-2 py-1 text-sm font-semibold text-green-900">−{game.descontoPercentual}%</span>}
                   </span>
-                  <span className="mt-4 block text-sm font-semibold text-brand-purple">Ver oferta na Steam →</span>
-                </span>
+                  <span className={`mt-4 ${comparable ? 'text-sm font-semibold text-brand-purple' : cardActionStyle}`}>
+                    {comparable ? 'Ver oferta na Steam' : 'Visualizar preço'}
+                  </span>
               </button>
-            </li>)}
+              <div className="grid gap-2 px-5 pb-5">
+                {comparable && <a href={`#/comparacao/${comparable.id}`} className={cardActionStyle}>Comparar preços</a>}
+                <FavoriteToggle card game={favorite} favorites={favorites} />
+              </div>
+            </li>;
+            })}
           </ul>
         </>}
         {moreError && <p role="alert" className="mt-5 !text-red-800">{moreError}</p>}
         {!searchedTerm && nextPage && <div className="mt-8 text-center"><button type="button" disabled={loadingMore} onClick={() => void loadMore()} className="rounded-xl border border-brand-purple bg-white px-8 py-3 font-semibold text-brand-purple hover:bg-violet-50 disabled:opacity-60">{loadingMore ? 'Carregando…' : 'Carregar mais jogos'}</button></div>}
       </section>
       </div>
-      <div id="epic-catalog" className="scroll-mt-8"><EpicCatalog term={epicTerm} genre={genre} priceFilter={priceFilter} onGenres={setEpicGenres} comparableGames={comparableGames} /></div>
+      <div id="epic-catalog" className="scroll-mt-8"><EpicCatalog term={epicTerm} genre={genre} priceFilter={priceFilter} onGenres={setEpicGenres} comparableGames={comparableGames} favorites={favorites} /></div>
       <dialog ref={dialog} onClose={() => { setSelectedGame(null); setDetails(null); setDetailsError(''); }}
         onClick={event => { if (event.target === event.currentTarget) closeDetails(); }}
         aria-labelledby="game-details-title" aria-describedby="game-details-description"
@@ -256,7 +275,12 @@ export function Busca() {
             <a href={`https://store.steampowered.com/app/${details.appId}/`} target="_blank" rel="noopener noreferrer"
               className="mb-4 inline-flex w-full items-center justify-center rounded-xl bg-brand-purple px-5 py-3 !text-white">Ver na Steam ↗</a>
           </>}
-          {selectedGame && comparableGames.filter(game => game.steam.appId === selectedGame.appId).map(game => <a key={game.id} href={`#/comparacao/${game.id}`} className="mb-4 inline-flex w-full justify-center rounded-xl border border-brand-purple px-5 py-3 font-semibold text-brand-purple">Comparar preços nas lojas →</a>)}
+          {selectedGame && comparableGames.filter(game => game.steam.appId === selectedGame.appId).map(game => (
+            <div key={game.id} className="mb-4">
+              <a href={`#/comparacao/${game.id}`} className="inline-flex w-full justify-center rounded-xl border border-brand-purple px-5 py-3 font-semibold text-brand-purple">Comparar preços nas lojas →</a>
+              <FavoriteToggle game={game} favorites={favorites} />
+            </div>
+          ))}
           <button type="button" onClick={closeDetails} className="w-full rounded-xl border border-slate-300 px-5 py-3 font-semibold hover:bg-cloud">Voltar à busca</button>
         </div>
       </dialog>

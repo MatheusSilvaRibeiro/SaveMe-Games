@@ -19,24 +19,25 @@ test.beforeEach(async ({ page }) => {
 test('entrada mostra seleção e identifica grátis sem abrir popup', async ({ page }) => {
   await page.goto('/#/busca');
   await expect(page.getByRole('heading', { name: 'Explore a Steam' })).toBeVisible();
-  const free = page.getByRole('button', { name: /Dota 2.*Ver oferta na Steam/ });
+  const free = page.getByRole('button', { name: /Dota 2.*Visualizar preço/ });
+  await expect(free.locator('..').getByRole('button', { name: 'Adicionar aos favoritos' })).toBeVisible();
   await expect(free).toContainText('Gratuito');
   await expect(free).not.toContainText('Preço sob consulta');
-  await expect(page.getByRole('button', { name: /Preço desconhecido.*Ver oferta/ })).toContainText('Preço sob consulta');
+  await expect(page.getByRole('button', { name: /Preço desconhecido.*Visualizar preço/ })).toContainText('Preço sob consulta');
 });
 
 test('combina gênero e preço, trata interseção vazia e limpa filtros', async ({ page }) => {
   await page.goto('/#/busca');
   await page.getByLabel('Gênero', { exact: true }).selectOption('Ação');
-  await expect(page.getByRole('button', { name: /Portal 2.*Ver oferta/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Dota 2.*Ver oferta/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Portal 2.*Visualizar preço/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Dota 2.*Visualizar preço/ })).toHaveCount(0);
   await page.getByLabel('Preço', { exact: true }).selectOption('free');
   await expect(page.getByText('Nenhum título corresponde aos filtros.', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Limpar filtros' }).click();
-  await expect(page.getByRole('button', { name: /Dota 2.*Ver oferta/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Dota 2.*Visualizar preço/ })).toBeVisible();
   await page.getByLabel('Preço', { exact: true }).selectOption('free');
-  await expect(page.getByRole('button', { name: /Dota 2.*Ver oferta/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Preço desconhecido.*Ver oferta/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Dota 2.*Visualizar preço/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Preço desconhecido.*Visualizar preço/ })).toHaveCount(0);
 });
 
 test('pesquisa reinicia filtros e permite voltar à seleção', async ({ page }) => {
@@ -62,7 +63,7 @@ test('falha da seleção não impede pesquisar', async ({ page }) => {
   await expect(page.getByRole('alert')).toBeVisible();
   await page.getByLabel('Qual jogo você está procurando?').fill('Dota');
   await page.getByRole('button', { name: 'Buscar', exact: true }).click();
-  await expect(page.getByRole('button', { name: /Dota 2.*Ver oferta/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Dota 2.*Visualizar preço/ })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });
 
@@ -79,9 +80,9 @@ test('carrega mais sem duplicatas e preserva os cards se uma página falhar', as
   await expect(page.getByText('Digite ao menos 2 caracteres e pressione Enter ou Buscar.')).toHaveCount(0);
   await page.getByRole('button', { name: 'Carregar mais jogos' }).click();
   await expect(page.getByRole('alert')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Dota 2.*Ver oferta/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Dota 2.*Visualizar preço/ })).toBeVisible();
   await page.getByRole('button', { name: 'Carregar mais jogos' }).click();
-  await expect(page.getByRole('button', { name: /Outro jogo.*Ver oferta/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Dota 2.*Ver oferta/ })).toHaveCount(1);
+  await expect(page.getByRole('button', { name: /Outro jogo.*Visualizar preço/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Dota 2.*Visualizar preço/ })).toHaveCount(1);
   await expect(page.getByRole('button', { name: 'Carregar mais jogos' })).toHaveCount(0);
 });
