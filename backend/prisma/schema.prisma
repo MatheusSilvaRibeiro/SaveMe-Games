@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String    @db.VarChar(100)
+  email        String    @unique @db.VarChar(254)
+  passwordHash String
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  sessions     Session[]
+  favorites    Favorite[]
+  priceAlerts  PriceAlert[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+enum StoreCode {
+  steam
+  epic
+}
+
+enum PriceState {
+  available
+  price_missing
+  unavailable
+}
+
+model Game {
+  id           String       @id @db.VarChar(100)
+  name         String       @db.VarChar(200)
+  edition      String       @db.VarChar(100)
+  platform     String       @db.VarChar(30)
+  imageUrl     String?
+  storeUrl     String?
+  catalogOrder Int          @default(0)
+  offers       StoreOffer[]
+  favorites    Favorite[]
+
+  @@map("games")
+}
+
+model Favorite {
+  userId    String   @db.Uuid
+  gameId    String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@id([userId, gameId])
+  @@index([gameId])
+  @@map("favorites")
+}
+
+model Store {
+  code   StoreCode    @id
+  name   String       @db.VarChar(100)
+  offers StoreOffer[]
+
+  @@map("stores")
+}
+
+model StoreOffer {
+  id            String             @id @default(uuid()) @db.Uuid
+  gameId        String             @db.VarChar(100)
+  storeCode     StoreCode
+  steamAppId    BigInt?            @unique
+  epicNamespace String?            @db.VarChar(100)
+  epicOfferId   String?            @db.VarChar(100)
+  epicPageSlug  String?            @db.VarChar(100)
+  game          Game               @relation(fields: [gameId], references: [id])
+  store         Store              @relation(fields: [storeCode], references: [code])
+  observations  PriceObservation[]
+
+  @@unique([gameId, storeCode])
+  @@unique([epicNamespace, epicOfferId])
+  @@index([storeCode])
+  @@map("store_offers")
+}
+
+model PriceObservation {
+  id               BigInt     @id @default(autoincrement())
+  offerId          String     @db.Uuid
+  priceCents       BigInt?
+  currency         String     @db.Char(3)
+  region           String     @db.Char(2)
+  state            PriceState
+  collectedAt      DateTime   @db.Timestamptz(3)
+  sourceRecordedAt DateTime?  @db.Timestamptz(3)
+  offer            StoreOffer @relation(fields: [offerId], references: [id])
+  alerts           PriceAlert[]
+
+  @@unique([offerId, region, collectedAt])
+  @@index([offerId, region, currency, state, collectedAt], map: "price_observations_alert_baseline_idx")
+  @@map("price_observations")
+}
+
+model PriceAlert {
+  id                 BigInt           @id @default(autoincrement())
+  userId             String           @db.Uuid
+  offerId            String           @db.Uuid
+  observationId      BigInt
+  gameId             String           @db.VarChar(100)
+  gameName           String           @db.VarChar(200)
+  store              StoreCode
+  storeUrl           String
+  region             String           @db.Char(2)
+  currency           String           @db.Char(3)
+  previousPriceCents BigInt
+  newPriceCents      BigInt
+  observedAt         DateTime         @db.Timestamptz(3)
+  readAt             DateTime?        @db.Timestamptz(3)
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  observation        PriceObservation @relation(fields: [observationId], references: [id])
+
+  @@unique([userId, offerId, observationId])
+  @@index([userId, id])
+  @@index([userId, readAt])
+  @@index([observationId])
+  @@map("price_alerts")
+}

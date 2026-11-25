@@ -1,0 +1,77 @@
+[
+  {
+    "id": "hades",
+    "nome": "Hades",
+    "edicao": "Jogo base",
+    "plataforma": "PC",
+    "imagem": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1145360/header.jpg?t=1758127023",
+    "steam": {
+      "appId": 1145360
+    },
+    "epic": {
+      "offerId": "2ae6edb2223c4f8c97e9839b5b6497bb",
+      "namespace": "min",
+      "pageSlug": "hades"
+    }
+  },
+  {
+    "id": "celeste",
+    "nome": "Celeste",
+    "edicao": "Jogo base",
+    "plataforma": "PC",
+    "imagem": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/504230/header.jpg?t=1714089525",
+    "steam": {
+      "appId": 504230
+    },
+    "epic": {
+      "offerId": "544c18ccadf8466691d8f2a335721b14",
+      "namespace": "b671fbc7be424e888c9346a9a6d3d9db",
+      "pageSlug": "celeste"
+    }
+  },
+  {
+    "id": "dead-cells",
+    "nome": "Dead Cells",
+    "edicao": "Jogo base",
+    "plataforma": "PC",
+    "imagem": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/588650/header.jpg?t=1779086887",
+    "steam": {
+      "appId": 588650
+    },
+    "epic": {
+      "offerId": "0357efab61f146289d74880509df7302",
+      "namespace": "1368a7f14c3344bbaededbae528fafed",
+      "pageSlug": "dead-cells"
+    }
+  },
+  {
+    "id": "hades-ii",
+    "nome": "Hades II",
+    "edicao": "Jogo base",
+    "plataforma": "PC",
+    "imagem": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1145350/91ac334a2c137d08968ccc0bc474a02579602100/header.jpg?t=1779901265",
+    "steam": {
+      "appId": 1145350
+    },
+    "epic": {
+      "offerId": "adbc94588a184ce3a6122a19aae940ae",
+      "namespace": "36a21c249987423a93f8442cc40a0e33",
+      "pageSlug": "hades-ii"
+    }
+  },
+  {
+    "id": "among-us",
+    "nome": "Among Us",
+    "edicao": "Jogo base",
+    "plataforma": "PC",
+    "imagem": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/945360/d611f3f87743b5121532023b1d3ee2dd0e96e772/header.jpg?t=1792187809",
+    "steam": {
+      "appId": 945360
+    },
+    "epic": {
+      "offerId": "63e07f28b89445ba80f06657ef0b68a7",
+      "namespace": "33956bcb55d4452d8c47e16b94e294bd",
+      "pageSlug": "among-us"
+    }
+  }
+]
