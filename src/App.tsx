@@ -1,3 +1,4 @@
+import { ApiStatus } from './components/ApiStatus';
 import { useEffect, useState } from 'react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -39,6 +40,7 @@ export function App() {
   return (
     <>
       <Header currentPath={route} />
+      <ApiStatus />
       <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-6 py-16 outline-none lg:px-10 lg:py-24">
         {Page ? <Page key={path} /> : <><h1>Página não encontrada</h1><a href="#/">Voltar ao início</a></>}
       </main>

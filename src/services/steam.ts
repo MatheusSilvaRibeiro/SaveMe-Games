@@ -1,3 +1,4 @@
+import { waitForApi } from './api-ready';
 export interface SearchItem {
   appId: number; nome: string; imagem: string | null; link: string;
   precoCentavos?: number | null; precoOriginalCentavos?: number | null; descontoPercentual?: number | null;
@@ -14,6 +15,7 @@ const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 export async function request<T>(path: string, signal: AbortSignal): Promise<T> {
   try {
+    await waitForApi(signal);
     const response = await fetch(`${base}${path}`, { signal: AbortSignal.any([signal, AbortSignal.timeout(25000)]) });
     if (!response.ok) {
       if (response.status === 404) throw new Error('Este conteúdo está indisponível nesta consulta.');

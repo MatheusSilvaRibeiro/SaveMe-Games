@@ -1,3 +1,4 @@
+import { waitForApi } from './api-ready';
 import { useSyncExternalStore } from 'react';
 
 export interface User { id: string; name: string; email: string; }
@@ -9,6 +10,7 @@ const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 function update(value: User | null) { revision++; user = value; listeners.forEach(listener => listener()); }
 async function request(path: string, body?: unknown) {
   try {
+    await waitForApi();
     const response = await fetch(`${base}/auth/${path}`, {
       credentials: 'include', method: body === undefined ? 'GET' : 'POST',
       headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },

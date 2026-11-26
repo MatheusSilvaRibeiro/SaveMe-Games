@@ -1,3 +1,4 @@
+import { waitForApi } from './api-ready';
 import { useEffect, useState } from 'react';
 
 export interface FavoriteGame {
@@ -14,6 +15,7 @@ type Snapshot = { owner: string; games?: FavoriteGame[]; error?: string; session
 type Mutation = { owner: string; pending?: string; error?: string; sessionExpired?: boolean };
 
 async function request(signal: AbortSignal, game?: FavoriteGame, method?: 'PUT' | 'DELETE') {
+  await waitForApi(signal);
   return fetch(`${base}/favorites${game ? '/' + encodeURIComponent(game.id) : ''}`, {
     credentials: 'include',
     signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
