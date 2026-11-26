@@ -1,3 +1,4 @@
+import { PreferencesController } from './preferences.js';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import 'reflect-metadata';
 import type { GameAssociationRepository } from './comparison/catalog.js';
@@ -128,7 +129,7 @@ export async function createApp(
   };
   @Module({
     imports: [AuthModule],
-    controllers: [SteamController, HealthController, EpicController, ComparisonController, PriceHistoryController, FavoritesController, PriceAlertsController],
+    controllers: [SteamController, HealthController, EpicController, ComparisonController, PriceHistoryController, FavoritesController, PriceAlertsController, PreferencesController],
     providers: [
       {
         provide: COMPARISON_SERVICE,

@@ -116,3 +116,9 @@ Os avisos aparecem no aplicativo à medida que uma consulta registra a queda. Ai
 Para validar, migre e carregue um PostgreSQL descartável novo de loopback com nome terminado em `_test`. Aponte `ALERTS_TEST_DATABASE_URL` para esse banco e execute `npm test --prefix backend`. O banco é real e as fontes de preço são simuladas. Execute `npm run test:e2e -- e2e/price-alerts.spec.ts` para os cenários de interface com API simulada.
 
 Para o fluxo completo, use outro banco descartável novo e já migrado e carregado. Defina `INTEGRATED_TEST_DATABASE_URL` e execute `npm test --prefix backend`. O teste cria duas contas, registra duas coletas simuladas, compara histórico e avisos por conta, verifica leitura em uma nova sessão e confirma a revogação no logout.
+
+## Preferencias de avisos
+
+`GET /api/preferences` retorna `{ "priceAlertsEnabled": true }` da conta autenticada. `PATCH /api/preferences` recebe somente esse booleano, valida origem e sessao e nunca aceita outro usuario como destino. Respostas: 200 sucesso, 400 corpo invalido, 401 sem sessao e 403 origem nao autorizada. A migration `202611260001_notification_preferences` preserva contas existentes com a opcao ativada.
+
+Ao desativar, novos registros de queda nao geram avisos para a conta. Avisos antigos e favoritos permanecem; reativar nao processa quedas retroativas. A preferencia controla o canal dentro do site. Nao existe envio de e-mail nesta versao. Teste integrado opcional: `PREFERENCES_TEST_DATABASE_URL` deve apontar exclusivamente para PostgreSQL descartavel de loopback e banco com sufixo `_test`.

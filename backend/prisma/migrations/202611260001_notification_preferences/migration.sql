@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "priceAlertsEnabled" BOOLEAN NOT NULL DEFAULT true;

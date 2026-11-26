@@ -15,6 +15,7 @@ model User {
   sessions     Session[]
   favorites    Favorite[]
   priceAlerts  PriceAlert[]
+  priceAlertsEnabled Boolean @default(true)
 
   @@map("users")
 }

@@ -10,6 +10,7 @@ export function Favoritos() {
   return <>
     <h1>Meus favoritos</h1>
     <p>Para jogos com comparação no catálogo, mostramos quedas de preço em <a href="#/avisos">Avisos</a> quando uma consulta registra a mudança.</p>
+    <p className="text-sm"><a href="#/preferencias">Configurar avisos</a></p>
     {!sessionReady ? <p role="status">Verificando sua sessão…</p>
       : !user || favorites.sessionExpired ? <p>Entre na sua conta para ver seus favoritos. <a href="#/login">Ir para o login</a></p>
       : favorites.error ? <div>
