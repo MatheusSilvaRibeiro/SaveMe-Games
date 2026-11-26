@@ -1,0 +1,45 @@
+name: Coleta de precos
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: saveme-price-collection
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.0'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Instalar backend
+        run: npm ci --include=dev --prefix backend
+      - name: Compilar backend
+        run: npm run build --prefix backend
+      - name: Coletar precos reais
+        env:
+          DATABASE_URL: ${{ secrets.SAVEME_DATABASE_URL }}
+        shell: bash
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo 'Configure o secret SAVEME_DATABASE_URL nas Actions deste repositorio.'
+            exit 1
+          fi
+          set +e
+          npm run prices:collect
+          code=$?
+          set -e
+          if [ "$code" -eq 2 ]; then
+            echo '::notice::Outra coleta ja esta ativa no banco.'
+            exit 0
+          fi
+          exit "$code"
