@@ -12,6 +12,7 @@ model User {
   email        String    @unique @db.VarChar(254)
   passwordHash String
   createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  passwordResets PasswordResetToken[]
   sessions     Session[]
   favorites    Favorite[]
   priceAlerts  PriceAlert[]
@@ -134,4 +135,17 @@ model PriceAlert {
   @@index([userId, readAt])
   @@index([observationId])
   @@map("price_alerts")
+}
+
+model PasswordResetToken {
+  tokenHash String @id @db.Char(64)
+  userId String @db.Uuid
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  usedAt DateTime? @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }

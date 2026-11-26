@@ -1,3 +1,4 @@
+import { RecoveryController, RecoveryService, RECOVERY_MAILER, BrevoRecoveryMailer, type RecoveryMailer } from './recovery.js';
 import { PreferencesController } from './preferences.js';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import 'reflect-metadata';
@@ -120,6 +121,7 @@ export async function createApp(
   client?: SteamClient,
   epicClient: EpicClient = createEpicCatalog(),
   associations?: GameAssociationRepository,
+  recoveryMailer: RecoveryMailer = new BrevoRecoveryMailer(),
 ) {
   const catalog = createCatalog();
   const steamClient: SteamClient = client ?? {
@@ -129,8 +131,8 @@ export async function createApp(
   };
   @Module({
     imports: [AuthModule],
-    controllers: [SteamController, HealthController, EpicController, ComparisonController, PriceHistoryController, FavoritesController, PriceAlertsController, PreferencesController],
-    providers: [
+    controllers: [RecoveryController, SteamController, HealthController, EpicController, ComparisonController, PriceHistoryController, FavoritesController, PriceAlertsController, PreferencesController],
+    providers: [RecoveryService, { provide: RECOVERY_MAILER, useValue: recoveryMailer },
       {
         provide: COMPARISON_SERVICE,
         inject: [DatabaseService],

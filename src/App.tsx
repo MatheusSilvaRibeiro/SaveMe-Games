@@ -1,3 +1,4 @@
+import { RecuperarSenha, RedefinirSenha } from './pages/RecuperarSenha';
 import { Preferencias } from './pages/Preferencias';
 import { ApiStatus } from './components/ApiStatus';
 import { useEffect, useState } from 'react';
@@ -14,6 +15,8 @@ import { Avisos } from './pages/Avisos';
 const pages = {
   '/': Home,
   '/login': Login,
+  '/recuperar-senha': RecuperarSenha,
+  '/redefinir-senha': RedefinirSenha,
   '/cadastro': Cadastro,
   '/busca': Busca,
   '/comparacao': Comparacao,

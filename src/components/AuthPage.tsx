@@ -76,6 +76,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'cadastro' }) {
             <label htmlFor="email" className="mb-2 block text-sm font-semibold">E-mail</label>
             <input id="email" name="email" type="email" autoComplete="email" required maxLength={254} placeholder="voce@exemplo.com" className={inputClass} />
           </div>
+          {!signup && <a href="#/recuperar-senha" className="inline-block text-sm">Esqueci minha senha</a>}
           <PasswordField id={signup ? 'signup-password' : 'login-password'} label="Senha" />
           {signup && <PasswordField id="confirm-password" label="Confirmar senha" confirm />}
 
