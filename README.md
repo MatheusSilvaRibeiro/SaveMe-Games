@@ -170,3 +170,11 @@ A hospedagem gratuita pode suspender a API quando fica sem uso. A interface veri
 O workflow `.github/workflows/collect-prices.yml` executa a coleta de precos reais quatro vezes ao dia (00:17, 06:17, 12:17 e 18:17 UTC) e admite inicio manual em Actions. Configure `SAVEME_DATABASE_URL` nos secrets de Actions com a conexao PostgreSQL do ambiente desejado. Ela nao deve ser uma variavel VITE nem ser versionada. A tarefa compila somente o backend, nao aplica migrations, nao faz seed e nao depende de acesso ao site. Os locks existentes impedem sobreposicao no banco. Falhas totais ou parciais deixam o job com erro para investigacao.
 
 O agendamento do GitHub nao garante minuto exato e pode atrasar. Em repositorios publicos sem atividade ele pode ser desabilitado pela plataforma; confira o estado em Actions. A evidencia da entrega deve incluir o link da execucao e os totais coletados. Historico registra somente consultas realizadas, sem dados antigos fabricados.
+
+## Extensao Chrome e Edge
+
+A pasta `extension/` e uma extensao Manifest V3, independente do servidor local. Para instalar: abra `chrome://extensions` ou `edge://extensions`, ative o modo do desenvolvedor e use **Carregar sem compactacao** selecionando essa pasta. Ao atualizar os arquivos, recarregue a extensao e a pagina da loja. Nao e necessario entrar na conta para consultar precos publicos.
+
+Ao abrir `https://store.steampowered.com/app/1145360/Hades/`, o painel usa o AppID da URL para consultar a comparacao publicada. Um jogo sem associacao pode apresentar somente sua oferta Steam, com essa limitacao explicita. Nas buscas Google, o usuario clica em Consultar ofertas; nenhuma pesquisa e enviada ao SaveMe antes desse clique. Titulos ambiguos nao sao escolhidos pelo primeiro resultado. Erros da API nao sao apresentados como uma comparacao bem-sucedida.
+
+A configuracao publica esta em `extension/config.js`; o manifesto permite somente consultas a https://saveme-games.vercel.app. A extensao nao recebe credenciais do banco. Testes do worker: `node --test extension/prices.test.cjs`. A instalacao para desenvolvimento nao equivale a publicacao nas lojas Chrome/Edge.

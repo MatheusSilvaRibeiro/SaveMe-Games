@@ -72,3 +72,8 @@
   outline: 2px solid #fff;
   outline-offset: -5px;
 }
+
+.saveme-games-panel button { font: inherit; cursor: pointer; }
+.saveme-games-panel button.saveme-games-compare-link { border: 0; }
+.saveme-games-panel button:disabled { opacity: .6; cursor: wait; }
+.saveme-games-panel > button:first-child { justify-self: end; border: 0; background: transparent; color: #5b21b6; padding: 4px 8px; }

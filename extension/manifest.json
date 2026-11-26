@@ -1,15 +1,41 @@
 {
   "manifest_version": 3,
   "name": "SaveMe Games",
-  "version": "0.1.0",
-  "description": "Mostra os preços da Steam e da Epic nos resultados do Google.",
-  "host_permissions": ["http://127.0.0.1:5173/*"],
-  "background": { "service_worker": "prices.js" },
+  "version": "0.2.0",
+  "description": "Compara ofertas ao abrir jogos na Steam e permite consultar pesquisas do Google.",
+  "host_permissions": [
+    "https://saveme-games.vercel.app/*"
+  ],
+  "background": {
+    "service_worker": "prices.js"
+  },
   "content_scripts": [
     {
-      "matches": ["https://www.google.com/search*", "https://www.google.com.br/search*"],
-      "js": ["google-search.js"],
-      "css": ["google-search.css"]
+      "matches": [
+        "https://www.google.com/search*",
+        "https://www.google.com.br/search*"
+      ],
+      "js": [
+        "config.js",
+        "panel.js",
+        "google-search.js"
+      ],
+      "css": [
+        "google-search.css"
+      ]
+    },
+    {
+      "matches": [
+        "https://store.steampowered.com/app/*"
+      ],
+      "js": [
+        "config.js",
+        "panel.js",
+        "steam-page.js"
+      ],
+      "css": [
+        "google-search.css"
+      ]
     }
   ]
 }
