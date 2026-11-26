@@ -4,7 +4,7 @@ import { logout, restoreSession, useUser } from '../services/auth';
 import { getUnreadAlerts, unreadAlertsChanged } from '../services/alerts';
 
 interface HeaderProps { currentPath: string; }
-const navigation = [['/', 'Início'], ['/busca', 'Buscar jogos'], ['/comparacao', 'Comparar preços'], ['/favoritos', 'Favoritos'], ['/avisos', 'Avisos']] as const;
+const navigation = [['/', 'Início'], ['/busca', 'Buscar jogos'], ['/comparacao', 'Comparar preços'], ['/favoritos', 'Favoritos'], ['/avisos', 'Avisos'], ['/preferencias', 'Prefer\u00eancias']] as const;
 
 export function Header({ currentPath }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);

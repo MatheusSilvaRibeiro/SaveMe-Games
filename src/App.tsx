@@ -1,3 +1,4 @@
+import { Preferencias } from './pages/Preferencias';
 import { ApiStatus } from './components/ApiStatus';
 import { useEffect, useState } from 'react';
 import { Header } from './components/Header';
@@ -18,6 +19,7 @@ const pages = {
   '/comparacao': Comparacao,
   '/favoritos': Favoritos,
   '/avisos': Avisos,
+  '/preferencias': Preferencias,
 };
 
 function getPath() {

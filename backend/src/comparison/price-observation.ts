@@ -50,7 +50,7 @@ export async function persistPriceObservations(tx: Prisma.TransactionClient, dat
     const identity = offerIdentity(offer);
     if (!identity) throw new Error('Oferta sem identidade válida para o aviso de preço.');
     const recipients = await tx.favorite.findMany({
-      where: { gameId: offer.game.id, createdAt: { lt: collectedAt } }, select: { userId: true },
+      where: { gameId: offer.game.id, createdAt: { lt: collectedAt }, user: { priceAlertsEnabled: true } }, select: { userId: true },
     });
     if (!recipients.length) continue;
     await tx.priceAlert.createMany({
