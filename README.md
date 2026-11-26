@@ -160,3 +160,7 @@ Mantenha a imagem/commit anterior para rollback da aplicação. Não reverta mig
 Na raiz, construa com `docker build -t saveme-games .`. O Dockerfile inclui site, API, catálogo e Prisma. Injete as variáveis no contêiner. A porta interna padrão é 3000 e a plataforma pode fornecer `PORT`. Para tarefas de release com a imagem, use `npm run db:migrate --prefix backend` e depois `npm run db:seed:catalog --prefix backend`, com `DATABASE_URL` no ambiente.
 
 **Validação Docker pendente:** o daemon local está indisponível. O roteiro de hospedagem nativa acima é independente dessa validação.
+
+## Primeiro acesso ao servidor publicado
+
+A hospedagem gratuita pode suspender a API quando fica sem uso. A interface verifica `/api/health` antes das consultas, compartilha essa espera entre telas e mostra um aviso se a inicializacao demorar. O limite de espera e de 90 segundos; depois disso o usuario pode tentar novamente. Apenas a verificacao de saude admite repeticao para erros temporarios. Cadastro, login e outras escritas nao sao reenviados automaticamente. A verificacao confirma o processo da API, nao a disponibilidade do banco ou das lojas. O acesso oficial do site e https://saveme-games.vercel.app; o dominio da Render e o backend.

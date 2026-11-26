@@ -1,3 +1,4 @@
+import { waitForApi } from './api-ready';
 export interface PriceAlert {
   id: string;
   gameId: string;
@@ -17,6 +18,7 @@ export const unreadAlertsChanged = 'saveme:unread-alerts-changed';
 export class AlertsSessionError extends Error {}
 
 async function request(path: string, signal: AbortSignal, write = false) {
+  await waitForApi(signal);
   const response = await fetch(`${base}/alerts${path}`, {
     signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
     credentials: 'include',
