@@ -122,3 +122,23 @@ Para o fluxo completo, use outro banco descartável novo e já migrado e carrega
 `GET /api/preferences` retorna `{ "priceAlertsEnabled": true }` da conta autenticada. `PATCH /api/preferences` recebe somente esse booleano, valida origem e sessao e nunca aceita outro usuario como destino. Respostas: 200 sucesso, 400 corpo invalido, 401 sem sessao e 403 origem nao autorizada. A migration `202611260001_notification_preferences` preserva contas existentes com a opcao ativada.
 
 Ao desativar, novos registros de queda nao geram avisos para a conta. Avisos antigos e favoritos permanecem; reativar nao processa quedas retroativas. A preferencia controla o canal dentro do site. Nao existe envio de e-mail nesta versao. Teste integrado opcional: `PREFERENCES_TEST_DATABASE_URL` deve apontar exclusivamente para PostgreSQL descartavel de loopback e banco com sufixo `_test`.
+
+
+## Recuperacao de senha
+
+`POST /api/auth/forgot-password` recebe somente `{ "email": "..." }` e responde com mensagem generica, exista ou nao a conta. `POST /api/auth/reset-password` recebe somente `{ "token": "...", "password": "..." }`. Ambas exigem JSON e verificam a origem. Limite em memoria: dez tentativas de recuperacao/troca por IP a cada 15 minutos, por instancia; cooldown de um minuto por conta para emissao. Configure proxies confiaveis conforme a rede para identificar corretamente o IP.
+
+O link usa fragmento `/#/redefinir-senha?token=...`, expira em 15 minutos e e de uso unico. Somente SHA-256 do token aleatorio de 32 bytes fica no banco. Uma troca invalida as sessoes e os demais links da conta. A senha usa o mesmo scrypt do cadastro. A operacao e serializada por usuario, inclusive em tentativas concorrentes. Tokens nao sao retornados na API nem registrados nos logs. A resposta generica nao garante tempos identicos entre contas conhecidas e desconhecidas.
+
+A migration `202611260002_password_recovery` cria apenas a tabela de tokens e indices. Nao altera senhas existentes. Aplicar somente apos revisao/autorizacao para o banco de destino.
+
+Envio pela API HTTPS do Brevo, sem SDK ou SMTP. Configure exclusivamente no backend:
+- `BREVO_API_KEY`: chave de API, nunca chave SMTP.
+- `MAIL_FROM`: somente o e-mail remetente verificado no Brevo, sem `Nome <...>`.
+- `PUBLIC_WEB_URL=https://saveme-games.vercel.app`: origem confiavel usada nos links, nunca derivada do cabecalho Host.
+
+Sem as tres configuracoes validas, a solicitacao retorna 503 antes de procurar a conta. Falha de entrega invalida o token recem-criado, registra apenas uma mensagem tecnica sem dados pessoais e preserva a resposta generica. Nao ha fila nem repeticao automatica; uma nova solicitacao pode ser feita. Uma resposta 200 nao comprova entrega ou existencia de conta.
+
+Crie e verifique o remetente em Settings > Senders, Domains, IPs > Senders. Sem dominio proprio, o Brevo documenta substituicao temporaria do remetente por `@brevosend.com`; disponibilidade depende da ativacao da conta. A configuracao deve ser comprovada com envio real, inclusive verificando spam, antes de considerar RF03 entregue. Render Free bloqueia portas SMTP usuais; por isso esta integracao usa HTTPS. Fontes: https://help.brevo.com/hc/en-us/articles/208836149-Create-a-new-sender-From-name-and-From-email e https://help.brevo.com/hc/en-us/articles/16045394674066-Troubleshooting-Domain-authentication.
+
+Teste de banco: `RECOVERY_TEST_DATABASE_URL` deve apontar exclusivamente para PostgreSQL local com nome terminado em `_test`; execute `npm test --prefix backend`. O teste injeta entrega simulada, confere hash, expiracao, concorrencia, revogacao de sessoes e isolamento de outra conta. Nao envia e-mail real. `e2e/recovery.spec.ts` usa respostas HTTP simuladas para as telas. A entrega real continua pendente ate configuracao do provedor.
