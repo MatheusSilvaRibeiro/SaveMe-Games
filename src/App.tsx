@@ -1,3 +1,4 @@
+import { Descobrir } from './pages/Descobrir';
 import { RecuperarSenha, RedefinirSenha } from './pages/RecuperarSenha';
 import { Preferencias } from './pages/Preferencias';
 import { ApiStatus } from './components/ApiStatus';
@@ -19,6 +20,7 @@ const pages = {
   '/redefinir-senha': RedefinirSenha,
   '/cadastro': Cadastro,
   '/busca': Busca,
+  '/descobrir': Descobrir,
   '/comparacao': Comparacao,
   '/favoritos': Favoritos,
   '/avisos': Avisos,

@@ -6,10 +6,13 @@ test('combina destaques reais, remove duplicatas e não transforma pacotes em ap
   const first = { type: 0, id: 620, name: 'Portal 2', currency: 'BRL', final_price: 1000, original_price: 2000 };
   const games = await listarDestaques({ fetchImpl: async () => new Response(JSON.stringify({
     top_sellers: { items: [first, first] },
-    specials: { items: [{ type: 1, id: 2, name: 'Pacote' }, { ...first, id: 570, name: 'Dota 2', final_price: 0 }] },
+    specials: { items: [{ type: 1, id: 2, name: 'Pacote' }, first, { ...first, id: 570, name: 'Dota 2', final_price: 0 }] },
     new_releases: { items: [{ ...first, id: 730, name: 'CS2' }] },
   })) });
   assert.deepEqual(games.map(item => item.appId), [620, 570, 730]);
+  assert.deepEqual(games[0].destaques, ['top_sellers', 'specials']);
+  assert.deepEqual(games[1].destaques, ['specials']);
+  assert.deepEqual(games[2].destaques, ['new_releases']);
   assert.equal(games[0].descontoPercentual, 50);
   assert.equal(games[1].precoCentavos, 0);
 });

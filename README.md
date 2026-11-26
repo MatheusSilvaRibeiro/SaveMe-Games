@@ -178,3 +178,14 @@ A pasta `extension/` e uma extensao Manifest V3, independente do servidor local.
 Ao abrir `https://store.steampowered.com/app/1145360/Hades/`, o painel usa o AppID da URL para consultar a comparacao publicada. Um jogo sem associacao pode apresentar somente sua oferta Steam, com essa limitacao explicita. Nas buscas Google, o usuario clica em Consultar ofertas; nenhuma pesquisa e enviada ao SaveMe antes desse clique. Titulos ambiguos nao sao escolhidos pelo primeiro resultado. Erros da API nao sao apresentados como uma comparacao bem-sucedida.
 
 A configuracao publica esta em `extension/config.js`; o manifesto permite somente consultas a https://saveme-games.vercel.app. A extensao nao recebe credenciais do banco. Testes do worker: `node --test extension/prices.test.cjs`. A instalacao para desenvolvimento nao equivale a publicacao nas lojas Chrome/Edge.
+
+
+## Descoberta de jogos
+
+A pagina `/#/descobrir` usa os destaques reais da Steam (mais vendidos, ofertas e novidades), preservando as categorias da fonte mesmo quando um titulo aparece em varias delas. A home apresenta uma previa e atalhos de busca, orcamento e favoritos. Nao se trata de recomendacao personalizada nem ranking global.
+
+Os filtros de genero, orcamento (R$ 10 a R$ 200), gratuidade e ordenacao operam nos destaques carregados, com paginacao explicita. Preco ausente nao e gratuito e fica fora dos filtros por valor. Somente itens com tipo `game` confirmado nos detalhes aparecem na descoberta; DLCs ou tipos desconhecidos nao sao recomendados como jogos completos. Falhas nos detalhes podem reduzir a selecao. O preco exibido e o da Steam, em reais; nao e anunciado como menor preco entre lojas.
+
+A acao de comparar usa correspondencia exata entre AppID e catalogo associado. Os demais jogos seguem para a busca; a descoberta nao amplia automaticamente a cobertura da comparacao nem cria associacoes por nome. O campo opcional `destaques` acrescentado ao contrato de listagem preserva os demais campos existentes. Nao ha migration ou novas dependencias.
+
+Testes direcionados em `e2e/discovery.spec.ts` cobrem filtros, preco zero/ausente, exclusao de DLC, categorias, links, paginacao sem duplicatas, falha/nova tentativa e layouts de 390 a 1440 pixels. Precos simulados existem apenas nos testes. A origem das categorias e coberta em `tools/steam/steam-featured.test.mjs`.

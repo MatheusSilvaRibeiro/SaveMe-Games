@@ -24,6 +24,7 @@ export async function listarDestaques({ fetchImpl = fetch, timeoutMs = 10000 } =
     ids.add(item.id); return true;
   }).map(item => ({
     appId: item.id, nome: item.name,
+    destaques: sections.filter(key => Array.isArray(payload[key]?.items) && payload[key].items.some(candidate => candidate?.id === item.id)),
     imagem: item.header_image ?? item.large_capsule_image ?? item.small_capsule_image ?? null,
     ...readPrice({ currency: item.currency, initial: item.original_price, final: item.final_price }),
     sistemas: readPlatforms({ windows: item.windows_available, mac: item.mac_available, linux: item.linux_available }),
