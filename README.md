@@ -164,3 +164,9 @@ Na raiz, construa com `docker build -t saveme-games .`. O Dockerfile inclui site
 ## Primeiro acesso ao servidor publicado
 
 A hospedagem gratuita pode suspender a API quando fica sem uso. A interface verifica `/api/health` antes das consultas, compartilha essa espera entre telas e mostra um aviso se a inicializacao demorar. O limite de espera e de 90 segundos; depois disso o usuario pode tentar novamente. Apenas a verificacao de saude admite repeticao para erros temporarios. Cadastro, login e outras escritas nao sao reenviados automaticamente. A verificacao confirma o processo da API, nao a disponibilidade do banco ou das lojas. O acesso oficial do site e https://saveme-games.vercel.app; o dominio da Render e o backend.
+
+### Agendamento da coleta em nuvem
+
+O workflow `.github/workflows/collect-prices.yml` executa a coleta de precos reais quatro vezes ao dia (00:17, 06:17, 12:17 e 18:17 UTC) e admite inicio manual em Actions. Configure `SAVEME_DATABASE_URL` nos secrets de Actions com a conexao PostgreSQL do ambiente desejado. Ela nao deve ser uma variavel VITE nem ser versionada. A tarefa compila somente o backend, nao aplica migrations, nao faz seed e nao depende de acesso ao site. Os locks existentes impedem sobreposicao no banco. Falhas totais ou parciais deixam o job com erro para investigacao.
+
+O agendamento do GitHub nao garante minuto exato e pode atrasar. Em repositorios publicos sem atividade ele pode ser desabilitado pela plataforma; confira o estado em Actions. A evidencia da entrega deve incluir o link da execucao e os totais coletados. Historico registra somente consultas realizadas, sem dados antigos fabricados.
