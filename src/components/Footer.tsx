@@ -23,6 +23,7 @@ export function Footer() {
           <nav aria-label="Explorar no rodapé" className="flex flex-col gap-3">
             <h3 className="mb-1 text-xs font-semibold uppercase tracking-widest text-slate-400">Explorar</h3>
             <a href="#/" className={linkStyle}>Início</a>
+            <a href="#/descobrir" className={linkStyle}>Descobrir jogos</a>
             <a href="#/busca" className={linkStyle}>Buscar jogos</a>
             <a href="#/comparacao" className={linkStyle}>Comparar preços</a>
           </nav>

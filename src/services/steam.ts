@@ -2,6 +2,8 @@ import { waitForApi } from './api-ready';
 export interface SearchItem {
   appId: number; nome: string; imagem: string | null; link: string;
   precoCentavos?: number | null; precoOriginalCentavos?: number | null; descontoPercentual?: number | null;
+  tipo?: string | null;
+  destaques?: string[];
   metacritic?: number | null; sistemas?: string[]; generos?: string[];
   situacaoPreco?: 'informado' | 'gratuito' | 'indisponivel';
 }
